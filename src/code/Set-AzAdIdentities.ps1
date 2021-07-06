@@ -198,7 +198,7 @@ function Add-AzIdentities
         [PSCredential]$adminCred,
         [parameter(Mandatory)]
         [string]$subscriptionId,
-        [paramter(Mandatory)]
+        [parameter(Mandatory)]
         [string]$tenantId,
         [parameter(Mandatory)]
         [string]$mgtGroupId,
