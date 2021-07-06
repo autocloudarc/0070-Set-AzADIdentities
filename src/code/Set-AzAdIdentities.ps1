@@ -196,11 +196,13 @@ function Add-AzIdentities
         [array]$azUsers,
         [parameter(Mandatory)]
         [PSCredential]$adminCred,
-        [parameter(Mandatory)]
+        [parameter(Mandatory,
+        ParameterSetName = "sub")]
         [string]$subscriptionId,
         [parameter(Mandatory)]
         [string]$tenantId,
-        [parameter(Mandatory)]
+        [parameter(Mandatory,
+        ParameterSetName = "mgt")]
         [string]$mgtGroupId,
         [parameter(Mandatory)]
         [string]$scope,
@@ -453,7 +455,14 @@ do {
 # https://docs.microsoft.com/en-us/powershell/module/azuread/new-azureadgroup?view=azureadps-2.0
 # https://docs.microsoft.com/en-us/powershell/module/azuread/new-azureaduser?view=azureadps-2.0
 
-Add-AzIdentities -azUsers $azUsers -adminCred $adminCred -subscriptionId $subscriptionId -tenantId $tenantId -mgtGroupId $mgtGroupId -scope $scope -Verbose
+if ($scope -eq "M")
+{
+Add-AzIdentities -azUsers $azUsers -adminCred $adminCred -tenantId $tenantId -mgtGroupId $mgtGroupId -scope $scope -Verbose
+} # end if
+elseif ($scope -eq "S")
+{
+    Add-AzIdentities -azUsers $azUsers -adminCred $adminCred -subscriptionId $subscriptionId -tenantId $tenantId -scope $scope -Verbose
+} # end else
 
 $StopTimerWoFw = Get-Date -Verbose
 Write-Output "Calculating elapsed time..."
