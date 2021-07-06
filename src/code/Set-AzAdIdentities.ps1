@@ -1,11 +1,8 @@
 ﻿#requires -version 7.1
 #requires -RunAsAdministrator
 
-# For IPAddress class
-Using Namespace System.Net
-# For Azure AD service principals marshal clas
+# For Azure AD service principals marshal class
 Using Namespace System.Runtime.InteropServices
-Using Namespace Microsoft.Azure.Commands.Network.Models
 
 <#
 .SYNOPSIS
