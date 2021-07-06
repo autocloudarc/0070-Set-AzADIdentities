@@ -426,7 +426,6 @@ $targetSubId = $subscriptionId
 Write-Output "The custom role definition that will be added to the subscription is shown below"
 $initializedRoleContent
 Write-Output "Now we will update the default place-holder subscription id of $defaultSubId with your current subscription id of: $targetSubId"
-Write-Output "These are the commands that will be used."
 
 # Replace the default subscription id with the current subscription id
 $updatedRoleContent = $initializedRoleContent.Replace($defaultSubId,$targetSubId)
