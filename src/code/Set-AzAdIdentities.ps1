@@ -1,8 +1,9 @@
 ﻿#requires -version 7.1
 #requires -RunAsAdministrator
 
-# For Azure AD service principals marshal class
-Using Namespace System.Runtime.InteropServices
+
+Using Namespace System.Net # For ServicePointmanager Class, ref: https://docs.microsoft.com/en-us/dotnet/api/system.net.servicepointmanager?view=net-5.0
+Using Namespace System.Runtime.InteropServices # For Azure AD service principals marshal class
 
 <#
 .SYNOPSIS
