@@ -82,6 +82,7 @@ This posting is provided "AS IS" with no warranties, and confers no rights.
 3. https://help.ubuntu.com/
 4. https://askubuntu.com/questions/1274028/how-to-install-powershell-7-on-ubuntu-20-04
 5. https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell-core-on-linux?view=powershell-7#ubuntu-2004
+6. https://docs.microsoft.com/en-us/azure/role-based-access-control/role-definitions
 
 
 .COMPONENT
