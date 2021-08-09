@@ -197,32 +197,15 @@ function Add-AzIdentities
         [array]$azUsers,
         [parameter(Mandatory)]
         [PSCredential]$adminCred,
-        [parameter(Mandatory,
-        ParameterSetName = "sub")]
-        [string]$subscriptionId,
         [parameter(Mandatory)]
         [string]$tenantId,
-        [parameter(Mandatory,
-        ParameterSetName = "mgt")]
-        [string]$mgtGroupId,
         [parameter(Mandatory)]
-        [string]$scope,
+        [string]$scopeId,
         [switch]$reset
     ) # end param
 
     # https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-powershell
-    $subscriptionScope = "/subscriptions/$subscriptionId"
-
-    switch ($scope)
-    {
-        "M" { $scopeId = $mgtGroupId }
-        "S" { $scopeId = $subscriptionId }
-        default 
-        { 
-            Write-Output "The scope level must either be [M]anagement Group or [S]ubscription...aborting function and script."
-            Exit-PSSession 
-        } # end condition
-    } # end switch
+    # $subscriptionScope = "/subscriptions/$subscriptionId"
 
     # http://get-cmd.com/?p=4949
     Write-Output "Connecting to AzureAD tennant $tenantId"
@@ -402,13 +385,13 @@ if (($mgtGroupList -gt 0) -and ($scope -eq "M"))
 } # end if
 #endregion
 
-#region credentials
+#region Credentials: This will use a single automatically generated, but unknown password for all users that will be provisioned, but can be changed from the portal afterwards if necessary. 
 $clrStringPw = New-ARMDeployRandomPassword -IncludeUpper -IncludeLower -IncludeNumbers -IncludeSpecial
 $secStringPw = ConvertTo-SecureString -String $clrStringPw -AsPlainText -Force
 
 [System.Management.Automation.PSCredential]$adminCred = New-Object System.Management.Automation.PSCredential ($adminUserName,$secStringPw)
 <#
-$adminCred = Get-Credential -UserName $adminUserName -Message @"
+$adminCred = Get-Credential -UserName $adminUserName -Message @"    
 Please specify a single, initial password for all Azure AD users that will be provisioned.
 This password must be complex, at least 12 characters including 3 of the following: lowercase, uppercase, numbers and special characters.
 "@
@@ -442,7 +425,7 @@ New-AzRoleDefinition -InputFile $customRolePath -Verbose
 $initializedRoleContent | Out-File -FilePath $customRolePath -Force
 # Wait for 100 seconds to allow sufficient time for role to provision in Azure AD
 $s = 0
-$message = "Waiting for 1 minutes (60 seconds) to allow custom role to provision in Azure AD."
+$message = "Waiting for 1 minute (60 seconds) to allow custom role to provision in Azure AD."
 do {
     Start-Sleep -Seconds 5
     $s++
@@ -456,14 +439,23 @@ do {
 # https://docs.microsoft.com/en-us/powershell/module/azuread/new-azureadgroup?view=azureadps-2.0
 # https://docs.microsoft.com/en-us/powershell/module/azuread/new-azureaduser?view=azureadps-2.0
 
-if ($scope -eq "M")
+$scopeId = $null
+switch ($scope)
 {
-Add-AzIdentities -azUsers $azUsers -adminCred $adminCred -tenantId $tenantId -mgtGroupId $mgtGroupId -scope $scope -Verbose
-} # end if
-elseif ($scope -eq "S")
-{
-    Add-AzIdentities -azUsers $azUsers -adminCred $adminCred -subscriptionId $subscriptionId -tenantId $tenantId -scope $scope -Verbose
-} # end else
+    "M" { 
+            $scopeId = $mgtGroupId 
+        } # end condition
+    "S" { 
+            $scopeId = $subscriptionId 
+        } # end condition
+    default 
+    { 
+        Write-Output "The scope level must either be [M]anagement Group or [S]ubscription...aborting function and script."
+        Exit-PSSession 
+    } # end condition
+} # end switch
+
+Add-AzIdentities -azUsers $azUsers -adminCred $adminCred -tenantId $tenantId -scopeId $scopeId -Verbose
 
 $StopTimerWoFw = Get-Date -Verbose
 Write-Output "Calculating elapsed time..."
