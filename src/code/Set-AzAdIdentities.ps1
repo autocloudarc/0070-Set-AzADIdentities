@@ -156,7 +156,8 @@ function Install-BootstrapModules
     # Install updated Az modules
     Install-Module -Name Az -AllowClobber -Verbose
     # Get required PowerShellGallery.com modules.
-    Get-ARMDeployPSModule -ModulesToInstall "AzureAD" -PSRepository $PSModuleRepository -Verbose 
+    # Get-ARMDeployPSModule -ModulesToInstall "AzureAD" -PSRepository $PSModuleRepository -Verbose 
+    Install-Module -Name AzureAD -Force -Verbose
 } # end function
 
 #region FUNCTIONS
