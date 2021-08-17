@@ -1,4 +1,4 @@
-﻿#requires -version 7.1
+﻿#requires -version 5.1
 #requires -RunAsAdministrator
 
 
@@ -156,8 +156,8 @@ function Install-BootstrapModules
     # Install updated Az modules
     Install-Module -Name Az -AllowClobber -Verbose
     # Get required PowerShellGallery.com modules.
-    # Get-ARMDeployPSModule -ModulesToInstall "AzureAD" -PSRepository $PSModuleRepository -Verbose 
-    Install-Module -Name AzureAD -Force -Verbose
+    Get-ARMDeployPSModule -ModulesToInstall "AzureAD" -PSRepository $PSModuleRepository -Verbose 
+
 } # end function
 
 #region FUNCTIONS
@@ -424,6 +424,7 @@ $updatedRoleContent | Out-File -FilePath $customRolePath -Force
 New-AzRoleDefinition -InputFile $customRolePath -Verbose
 # Write the initialized role definition back out to the file system
 $initializedRoleContent | Out-File -FilePath $customRolePath -Force
+$customRoleObject = $initializedRoleContent | ConvertFrom-Json
 # Wait for 100 seconds to allow sufficient time for role to provision in Azure AD
 $s = 0
 $message = "Waiting for 1 minute (60 seconds) to allow custom role to provision in Azure AD."
@@ -432,7 +433,7 @@ do {
     $s++
     $today = Get-Date
     "{0}`t{1}" -f @($today, $message)
-} until ($s -eq 12)
+} until ((Get-AzRoleDefinition -Name $($customRoleObject.name)) -eq ($customRoleObject.name))
 
 #endregion
 
