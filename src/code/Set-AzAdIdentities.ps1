@@ -212,8 +212,8 @@ function Add-AzIdentities
     Write-Output "Connecting to AzureAD tennant $tenantId"
     Write-Warning "The web based prompt may open in a separate window, so you may have to minimize this window first to see it."
     Connect-AzureAD -TenantId $tenantId -Verbose
-    $securePassword = $adminCred.Password
-    # $tenantDomain = (Get-AzAdUser).UserPrincipalName.Split('@')[-1]
+    $plainTextPw = $adminCred.GetNetworkCredential().Password
+    $securePassword = ConvertTo-SecureString -String $plainTextPw -AsPlainText -Force
     $tenantDomain = ((Get-AzureADTenantDetail).VerifiedDomains | Where-Object {$_._Default -eq 'True'}).Name 
     <#
     $customRole = "AdatumVMOperator"
@@ -240,7 +240,7 @@ function Add-AzIdentities
             $azAdTenantSuffix = "@" + $tenantDomain
             $upn = $azUser.userName + $azAdTenantSuffix
             # https://docs.microsoft.com/en-us/powershell/module/az.resources/new-azaduser?view=azps-4.6.1
-            $currentUser = New-AzADUser -DisplayName $azUser.displayName -UserPrincipalName $upn -Password $securePassword -MailNickName $upn -ErrorAction SilentlyContinue
+            $currentUser = New-AzADUser -DisplayName $azUser.displayName -UserPrincipalName $upn -Password $securePassword -MailNickName $upn
             Add-AzADGroupMember -MemberUserPrincipalName $upn -TargetGroupDisplayName $azUser.aadSecurityGroup -Verbose
             $findCommas = $null
             if ($azUser.tenantRole -eq 'false')
