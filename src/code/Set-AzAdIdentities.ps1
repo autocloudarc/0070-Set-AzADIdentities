@@ -427,13 +427,14 @@ $initializedRoleContent | Out-File -FilePath $customRolePath -Force
 $customRoleObject = $initializedRoleContent | ConvertFrom-Json
 # Wait for 100 seconds to allow sufficient time for role to provision in Azure AD
 $s = 0
-$message = "Waiting for 1 minute (60 seconds) to allow custom role to provision in Azure AD."
+$message = "Waiting for to allow custom the $($customRoleObject.name) role to provision in Azure AD."
+$customRoleName = $customRoleObject.name 
 do {
     Start-Sleep -Seconds 5
     $s++
     $today = Get-Date
     "{0}`t{1}" -f @($today, $message)
-} until ((Get-AzRoleDefinition -Name $($customRoleObject.name)) -eq ($customRoleObject.name))
+} until (((Get-AzRoleDefinition -Name $customRoleName).name) -eq ($customRoleName))
 
 #endregion
 
