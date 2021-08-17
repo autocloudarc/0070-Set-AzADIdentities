@@ -214,7 +214,7 @@ function Add-AzIdentities
     Connect-AzureAD -TenantId $tenantId -Verbose
     $securePassword = $adminCred.Password
     # $tenantDomain = (Get-AzAdUser).UserPrincipalName.Split('@')[-1]
-    $tenantDomain = ((Get-AzureADTenantDetail).VerifiedDomains | Where-Object {$_.Default -eq 'True'}).Name 
+    $tenantDomain = ((Get-AzureADTenantDetail).VerifiedDomains | Where-Object {$_._Default -eq 'True'}).Name 
     <#
     $customRole = "AdatumVMOperator"
     $rbacTypeCustom = "Custom"
