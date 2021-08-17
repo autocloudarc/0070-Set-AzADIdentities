@@ -238,9 +238,9 @@ function Add-AzIdentities
             $currentGroup = New-AzADGroup -DisplayName $azUser.aadSecurityGroup -MailNickName (($azUser.aadSecurityGroup).replace(" ","")) -Description $azUser.rbacRole -ErrorAction SilentlyContinue
             $groupObjectId = (Get-AzAdGroup -SearchString $azUser.aadSecurityGroup).Id
             $azAdTenantSuffix = "@" + $tenantDomain
-            $upn = $azUser.pocUserName + $azAdTenantSuffix
+            $upn = $azUser.userName + $azAdTenantSuffix
             # https://docs.microsoft.com/en-us/powershell/module/az.resources/new-azaduser?view=azps-4.6.1
-            $currentUser = New-AzADUser -DisplayName $azUser.displayName -UserPrincipalName $upn -Password $securePassword -MailNickName $azUser.userName -ErrorAction SilentlyContinue
+            $currentUser = New-AzADUser -DisplayName $azUser.displayName -UserPrincipalName $upn -Password $securePassword -MailNickName $upn -ErrorAction SilentlyContinue
             Add-AzADGroupMember -MemberUserPrincipalName $upn -TargetGroupDisplayName $azUser.aadSecurityGroup -Verbose
             $findCommas = $null
             if ($azUser.tenantRole -eq 'false')
@@ -277,7 +277,7 @@ function Add-AzIdentities
             # https://docs.microsoft.com/en-us/powershell/module/az.resources/remove-azadgroup?view=azps-4.6.1
             Remove-AzADGroup -DisplayName $azUserReset.aadSecurityGroup -Force -Verbose
             # https://docs.microsoft.com/en-us/powershell/module/az.resources/remove-azaduser?view=azps-4.6.1
-            Remove-AzADUser -UserPrincipalName $pocUpn -PassThru -Force -Verbose
+            Remove-AzADUser -UserPrincipalName $upn -PassThru -Force -Verbose
         } # end foreach
         # Removes the custom role definition from the subscription as part of cleanup.
         Write-Output "You must manually remove any role assignments for the $customRole as well as remove this custom role $customRole manually from the Azure Portal at https://portal.azure.com"
@@ -434,7 +434,7 @@ do {
     $s++
     $today = Get-Date
     "{0}`t{1}" -f @($today, $message)
-} until (((Get-AzRoleDefinition -Name $customRoleName).name) -eq ($customRoleName))
+} until (((Get-AzRoleDefinition -Name $customRoleName).name) -eq ($customRoleName) -and ($s -eq 12))
 
 #endregion
 
