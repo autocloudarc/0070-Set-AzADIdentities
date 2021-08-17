@@ -240,7 +240,7 @@ function Add-AzIdentities
             $azAdTenantSuffix = "@" + $tenantDomain
             $upn = $azUser.userName + $azAdTenantSuffix
             # https://docs.microsoft.com/en-us/powershell/module/az.resources/new-azaduser?view=azps-4.6.1
-            $currentUser = New-AzADUser -DisplayName $azUser.displayName -UserPrincipalName $upn -Password $securePassword -MailNickName $upn
+            $currentUser = New-AzADUser -DisplayName $azUser.displayName -UserPrincipalName $upn -Password $securePassword -MailNickName $azUser.userName
             Add-AzADGroupMember -MemberUserPrincipalName $upn -TargetGroupDisplayName $azUser.aadSecurityGroup -Verbose
             $findCommas = $null
             if ($azUser.tenantRole -eq 'false')
