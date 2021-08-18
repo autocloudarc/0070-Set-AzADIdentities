@@ -215,6 +215,7 @@ function Add-AzIdentities
     $plainTextPw = $adminCred.GetNetworkCredential().Password
     $securePassword = ConvertTo-SecureString -String $plainTextPw -AsPlainText -Force
     $tenantDomain = ((Get-AzureADTenantDetail).VerifiedDomains | Where-Object {$_._Default -eq 'True'}).Name 
+    $waitForSeconds = 30
 
     if (-not($reset))
     {
@@ -238,7 +239,8 @@ function Add-AzIdentities
                 if (-not($null -eq $groupObjectId))
                 {
                     $groupCreated = $true
-                } # end if             
+                } # end if  
+                Start-Sleep -Seconds $waitForSeconds           
             } until ($groupCreated)
           
             $azAdTenantSuffix = "@" + $tenantDomain
