@@ -234,16 +234,19 @@ function Add-AzIdentities
             {
                 $rbacTypeBuiltIn = $azUser.rbacType 
             } # end else
+            
             # https://docs.microsoft.com/en-us/powershell/module/az.resources/new-azadgroup?view=azps-4.6.1
-            $currentGroup = New-AzADGroup -DisplayName $azUser.aadSecurityGroup -MailNickName (($azUser.aadSecurityGroup).replace(" ","")) -Description $azUser.rbacRole -ErrorAction SilentlyContinue
-            $groupObjectId = (Get-AzAdGroup -SearchString $azUser.aadSecurityGroup).Id
+            do {
+                $currentGroup = New-AzADGroup -DisplayName $azUser.aadSecurityGroup -MailNickName (($azUser.aadSecurityGroup).replace(" ","")) -Description $azUser.rbacRole -ErrorAction SilentlyContinue
+                $groupObjectId = (Get-AzAdGroup -SearchString $azUser.aadSecurityGroup).Id                
+            } until (-not($null -eq $groupObjectId))
+          
             $azAdTenantSuffix = "@" + $tenantDomain
             $upn = $azUser.userName + $azAdTenantSuffix
             # https://docs.microsoft.com/en-us/powershell/module/az.resources/new-azaduser?view=azps-4.6.1
             $userCreated = $false
-            Do
-            {
-                $currentUser = New-AzADUser -DisplayName $azUser.displayName -UserPrincipalName $upn -Password $securePassword -MailNickName $azUser.userName
+            do {
+                $currentUser = New-AzADUser -DisplayName $azUser.displayName -UserPrincipalName $upn -Password $securePassword -MailNickName $azUser.userName -ErrorAction SilentlyContinue
                 if ($currentUser.UserPrincipalName)
                 {
                     $userCreated = $true
