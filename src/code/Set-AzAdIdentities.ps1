@@ -371,36 +371,24 @@ Select-AzSubscription -SubscriptionName $Subscription -Verbose
 $subscriptionId = (Select-AzSubscription -SubscriptionName $Subscription).Subscription.id
 $tenantId = (Get-AzSubscription -SubscriptionName $Subscription).TenantId
 
-# Select RBAC scope (management group or subscription)
-$scopeOptions = @("M","S")
-Do
-{
-	[string]$scope = Read-Host "Please select the type of scope to which you want to apply Role-Based-Access-Control [M]anagement Group | [S]ubscription <Enter M or S>"
-    $scope = $scope.ToUpper()
-} #end Do
-Until ($scope -in $scopeOptions)
-
-Write-Output "You selected scope option $scope (M = Managment Group, S = Subscription)"
-
 # List and select management groups
 $mgtGroupList = (Get-AzManagementGroup).Name
 
 if ($mgtGroupList -eq 0)
 {
     Write-Output "A management group hierarchy has not yet been defined for this tenant, so the Role-Based-Access-Control scope option will be changed to [S]ubscription"
-    $scope = "S"
 } # end if
-
-if (($mgtGroupList -gt 0) -and ($scope -eq "M"))
+else 
 {
-    Do
+    do
     {
         $mgtGroupList
         [string]$mgtGroup = Read-Host "Please enter your management group name to which you would like to scope Role Based Access Controls for these identities, i.e. [azr-dev-mgp-01]"
         $mgtGroupId = (Get-AzManagementGroup -GroupName $mgtGroup).Id
     } #end Do
     Until ($mgtGroup -in $mgtGroupList)
-} # end if
+} # end else
+
 #endregion
 
 #region Credentials: This will use a single automatically generated, but unknown password for all users that will be provisioned, but can be changed from the portal afterwards if necessary. 
@@ -459,21 +447,7 @@ do {
 # https://docs.microsoft.com/en-us/powershell/module/azuread/new-azureadgroup?view=azureadps-2.0
 # https://docs.microsoft.com/en-us/powershell/module/azuread/new-azureaduser?view=azureadps-2.0
 
-$scopeId = $null
-switch ($scope)
-{
-    "M" { 
-            $scopeId = $mgtGroupId 
-        } # end condition
-    "S" { 
-            $scopeId = $subscriptionId 
-        } # end condition
-    default 
-    { 
-        Write-Output "The scope level must either be [M]anagement Group or [S]ubscription...aborting function and script."
-        Exit-PSSession 
-    } # end condition
-} # end switch
+$scopeId = $subscriptionId
 
 Add-AzIdentities -azUsers $azUsers -adminCred $adminCred -tenantId $tenantId -scopeId $scopeId -Verbose
 
@@ -513,7 +487,7 @@ else
 #region cleanup
 # Cleanup AzureAD users and groups
 $cleanupAzureAD = "Would you like to cleanup the AzureAD directory by removing the previously provisioned users and groups now? [YES/NO | Y/N]"
-Do
+do
 {
     $cleanupAzureADResponse = read-host $cleanupAzureAD
     $cleanupAzureADResponse = $cleanupAzureADResponse.ToUpper()
