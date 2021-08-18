@@ -201,12 +201,12 @@ function Add-AzIdentities
         [parameter(Mandatory)]
         [string]$tenantId,
         [parameter(Mandatory)]
-        [string]$scopeId,
+        [string]$subscriptionId,
         [switch]$reset
     ) # end param
 
     # https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-powershell
-    # $subscriptionScope = "/subscriptions/$subscriptionId"
+    $scopeId = "/subscriptions/$subscriptionId"
 
     # http://get-cmd.com/?p=4949
     Write-Output "Connecting to AzureAD tennant $tenantId"
@@ -215,11 +215,6 @@ function Add-AzIdentities
     $plainTextPw = $adminCred.GetNetworkCredential().Password
     $securePassword = ConvertTo-SecureString -String $plainTextPw -AsPlainText -Force
     $tenantDomain = ((Get-AzureADTenantDetail).VerifiedDomains | Where-Object {$_._Default -eq 'True'}).Name 
-    <#
-    $customRole = "AdatumVMOperator"
-    $rbacTypeCustom = "Custom"
-    $rbacTypeBuiltIn = "Built-in"
-    #>
 
     if (-not($reset))
     {
@@ -447,9 +442,7 @@ do {
 # https://docs.microsoft.com/en-us/powershell/module/azuread/new-azureadgroup?view=azureadps-2.0
 # https://docs.microsoft.com/en-us/powershell/module/azuread/new-azureaduser?view=azureadps-2.0
 
-$scopeId = $subscriptionId
-
-Add-AzIdentities -azUsers $azUsers -adminCred $adminCred -tenantId $tenantId -scopeId $scopeId -Verbose
+Add-AzIdentities -azUsers $azUsers -adminCred $adminCred -tenantId $tenantId -scopeId $subscriptionId -Verbose
 
 $StopTimerWoFw = Get-Date -Verbose
 Write-Output "Calculating elapsed time..."
