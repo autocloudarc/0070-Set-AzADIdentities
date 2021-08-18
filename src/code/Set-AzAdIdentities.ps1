@@ -442,7 +442,7 @@ do {
 # https://docs.microsoft.com/en-us/powershell/module/azuread/new-azureadgroup?view=azureadps-2.0
 # https://docs.microsoft.com/en-us/powershell/module/azuread/new-azureaduser?view=azureadps-2.0
 
-Add-AzIdentities -azUsers $azUsers -adminCred $adminCred -tenantId $tenantId -scopeId $subscriptionId -Verbose
+Add-AzIdentities -azUsers $azUsers -adminCred $adminCred -tenantId $tenantId -subscriptionId $subscriptionId -Verbose
 
 $StopTimerWoFw = Get-Date -Verbose
 Write-Output "Calculating elapsed time..."
