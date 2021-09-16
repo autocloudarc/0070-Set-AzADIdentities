@@ -7,7 +7,7 @@ Using Namespace System.Runtime.InteropServices # For Azure AD service principals
 
 <#
 .SYNOPSIS
-Provisions Azure AD identities and roles for role based access control to subscription resources.
+Provisions Azure AD identities and roles for role based access control to the Azure directory and subscription resources.
 
 .DESCRIPTION
 This script creates a set of users, groups and applies roles to the new groups based on a consolidated list of identities and roles that are pre-defined in a CSV file.
@@ -45,6 +45,9 @@ Placehoder username for which the secure password for all the identities that wi
 
 .PARAMETER defaultSubId
 Used to set/reset placehoder default subscription ID value of: 11111111-1111-1111-1111-111111111111 to protect confidentiality of previous subscription id from a previously executed script.
+
+.PARAMETER reset
+Resets the directory to it's original state by removing the provisioned identities and role assignments, and is useful for dev/test scenarios or when developing or enhancing this script.
 
 .EXAMPLE
 . .\Set-AzIdentities.ps1 -AzureEnvironment AzureUSGovernment -Verbose
@@ -111,7 +114,8 @@ Param
     [string]$pathToIdentitiesFile = ".\input\identities.csv",
     [array]$azUsers = (Import-Csv -path $pathToIdentitiesFile),
     [string]$adminUserName = "adm.azure.user",
-    [string]$defaultSubId = "11111111-1111-1111-1111-111111111111"
+    [string]$defaultSubId = "11111111-1111-1111-1111-111111111111",
+    [switch]$reset
 ) # end param
 
 $ErrorActionPreference = 'Continue'
@@ -278,6 +282,8 @@ function Add-AzIdentities
             else
             {
                 # https://stackoverflow.com/questions/41960561/how-to-find-out-who-the-global-administrator-is-for-a-directory-to-which-i-belon
+                # https://docs.microsoft.com/en-us/azure/active-directory/roles/groups-create-eligible
+                # TASK-ITEM: Add the isAssignableToRole property to Groups to allow assignment to Azure AD Roles.
                 Write-Output "The users $upn as members of the $($azUser.aadSecurityGroup) will have to be added to the Azure AD tenant role of $($azUser.rbacRole) manually in the Azure portal https://portal.azure.com "
             } # end else
             # Add role assignments
