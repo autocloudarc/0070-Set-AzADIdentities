@@ -387,6 +387,7 @@ Do
 	$Subscription = $Subscription.ToUpper()
 } #end Do
 Until ($Subscription -in (Get-AzSubscription).Name)
+# https://docs.microsoft.com/en-us/powershell/azure/context-persistence?view=azps-7.0.0#overview-of-azure-context-objects
 Select-AzSubscription -SubscriptionName $Subscription -Verbose
 $subscriptionId = (Select-AzSubscription -SubscriptionName $Subscription).Subscription.id
 $tenantId = (Get-AzSubscription -SubscriptionName $Subscription).TenantId

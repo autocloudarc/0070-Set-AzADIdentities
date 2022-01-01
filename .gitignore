@@ -1,5 +1,6 @@
 # VS Code Settings
 setting.json
+**/launch.json
 
 # Windows image file caches
 Thumbs.db
