@@ -206,13 +206,11 @@ function Add-AzIdentities
         [parameter(Mandatory)]
         [string]$tenantId,
         [parameter(Mandatory)]
-        [string]$subscriptionId,
+        [string]$scope,
         [switch]$reset
     ) # end param
 
     # https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-powershell
-    $scopeId = "/subscriptions/$subscriptionId"
-
     # http://get-cmd.com/?p=4949
     Write-Output "Connecting to AzureAD tennant $tenantId"
     Write-Warning "The web based prompt may open in a separate window, so you may have to minimize this window first to see it."
@@ -271,7 +269,7 @@ function Add-AzIdentities
                     $result = @{}
                     while ($result.count -eq 0)
                     {
-                        $result = New-AzRoleAssignment -ObjectId $groupObjectId -RoleDefinitionName $azUser.rbacRole -Scope $scopeId -Description $roleDescription
+                        $result = New-AzRoleAssignment -ObjectId $groupObjectId -RoleDefinitionName $azUser.rbacRole -Scope $scope -Description $roleDescription
                         # Wait for $waitTime seconds
                         Write-Output "Waiting $waitTime seconds for Role Assignment - $($azUser.rbacRole) at $subscriptiohScope..."
                         Start-Sleep -Seconds $waitTime -Verbose
@@ -286,7 +284,7 @@ function Add-AzIdentities
                         $result = @{}
                         while ($result.count -eq 0)
                         {
-                            $result = New-AzRoleAssignment -ObjectId $groupObjectId -RoleDefinitionName $role -Scope $scopeId -Description $roleDescr
+                            $result = New-AzRoleAssignment -ObjectId $groupObjectId -RoleDefinitionName $role -Scope $scope -Description $roleDescr
                             # Wait for $waitTime seconds
                             Write-Output "Waiting $waitTime seconds for Role Assignment - $role at $subscriptiohScope..."
                             Start-Sleep -Seconds $waitTime -Verbose
@@ -393,23 +391,40 @@ Select-AzSubscription -SubscriptionName $Subscription -Verbose
 $subscriptionId = (Select-AzSubscription -SubscriptionName $Subscription).Subscription.id
 $tenantId = (Get-AzSubscription -SubscriptionName $Subscription).TenantId
 
+$scopes = @("S","M")
+do
+{
+    [string]$scopeOption = "At what scope would you like to assign roles to? Enter 'S' for current [S]ubscription or 'M' for a [M]anagment Group that will be selected later [S|M]"
+} 
+Until ($scopeOption -in $scopes)
+
 # List and select management groups
 $mgtGroupList = (Get-AzManagementGroup).Name
 
-if ($mgtGroupList -eq 0)
+if ($scopeOption -eq "M")
 {
-    Write-Output "A management group hierarchy has not yet been defined for this tenant, so the Role-Based-Access-Control scope option will be changed to [S]ubscription"
-} # end if
+    if (($mgtGroupList.Count -eq 1) -and ($mgtGroupList[0] -eq $tenantId))
+    {
+        Write-Output "A management group hierarchy has not yet been defined for this tenant, so the Role-Based-Access-Control scope option will be changed to [S]ubscription"
+        $scopeOption = "S"
+        $scope = "/subscription/$subscriptionId"
+    } # end if
+    else 
+    {
+        do
+        {
+            $mgtGroupList
+            [string]$mgtGroup = Read-Host "Please enter your management group name to which you would like to scope Role Based Access Controls for these identities, i.e. [azr-dev-mgp-01]"
+            $mgtGroupId = (Get-AzManagementGroup -GroupName $mgtGroup).Id
+        } #end Do
+        Until ($mgtGroup -in $mgtGroupList)
+        $scope = $mgtGroupId
+    } # end else
+}
 else 
 {
-    do
-    {
-        $mgtGroupList
-        [string]$mgtGroup = Read-Host "Please enter your management group name to which you would like to scope Role Based Access Controls for these identities, i.e. [azr-dev-mgp-01]"
-        $mgtGroupId = (Get-AzManagementGroup -GroupName $mgtGroup).Id
-    } #end Do
-    Until ($mgtGroup -in $mgtGroupList)
-} # end else
+    $scope = "/subscription/$subscriptionId"
+}
 
 #endregion
 
@@ -471,7 +486,7 @@ do {
 # https://docs.microsoft.com/en-us/powershell/module/azuread/new-azureadgroup?view=azureadps-2.0
 # https://docs.microsoft.com/en-us/powershell/module/azuread/new-azureaduser?view=azureadps-2.0
 
-Add-AzIdentities -azUsers $azUsers -adminCred $adminCred -tenantId $tenantId -subscriptionId $subscriptionId -Verbose
+Add-AzIdentities -azUsers $azUsers -adminCred $adminCred -tenantId $tenantId -scope $scope -Verbose
 
 $StopTimerWoFw = Get-Date -Verbose
 Write-Output "Calculating elapsed time..."
@@ -520,7 +535,7 @@ Until ($cleanupAzureADResponse -eq "Y" -OR $cleanupAzureADResponse -eq "YES" -OR
 If ($cleanupAzureADResponse -in @('Y', 'YES'))
 {
     Write-Warning "Removing previously provisioned users and groups from Azure AD tenant $tenantId."
-    Add-AzIdentities -azUsers $azUsers -adminCred $adminCred -subscriptionId $subscriptionId -tenantId $tenantId -mgtGroupId $mgtGroupId -scope $scope -reset -Verbose
+    Add-AzIdentities -azUsers $azUsers -adminCred $adminCred -tenantId $tenantId -scope $scope -reset -Verbose
 } #end condition
 else
 {
