@@ -60,3 +60,6 @@ Network Trash Folder
 Temporary Items
 .apdisk
 data/dsc/mof/cltsql1003.dev.adatum.com.mof.error
+
+# Diagrams
+**/*.vsdx
