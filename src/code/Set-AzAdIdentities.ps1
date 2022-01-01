@@ -316,6 +316,8 @@ function Add-AzIdentities
 $scriptName = $MyInvocation.MyCommand.name
 # Use script filename without exension as a log prefix
 $LogPrefix = $scriptName.Split(".")[0]
+# Uncomment below if this script is converted to use PowerShell core (v7.x)
+<#
 if ($isWindows)
 {
     $modulePath = "C:\Program Files\WindowsPowerShell\Modules"
@@ -324,6 +326,8 @@ else
 {
     $modulePath = "/usr/local/share/powershell/Modules"
 } # end else if
+#>
+$modulePath = "C:\Program Files\WindowsPowerShell\Modules"
 
 $LogDirectory = Join-Path $modulePath -ChildPath $LogPrefix -Verbose
 # Create log directory if not already present
@@ -397,6 +401,8 @@ else
 #region Credentials: This will use a single automatically generated, but unknown password for all users that will be provisioned, but can be changed from the portal afterwards if necessary. 
 $clrStringPw = New-ARMDeployRandomPassword -IncludeUpper -IncludeLower -IncludeNumbers -IncludeSpecial
 $secStringPw = ConvertTo-SecureString -String $clrStringPw -AsPlainText -Force
+# Reset clear-text password to null for confidentiality
+$clrStringPw = $null 
 
 [System.Management.Automation.PSCredential]$adminCred = New-Object System.Management.Automation.PSCredential ($adminUserName,$secStringPw)
 <#
@@ -435,7 +441,7 @@ $initializedRoleContent | Out-File -FilePath $customRolePath -Force
 $customRoleObject = $initializedRoleContent | ConvertFrom-Json
 # Wait for 100 seconds to allow sufficient time for role to provision in Azure AD
 $s = 0
-$message = "Waiting for to allow the custom $($customRoleObject.name) role to provision in Azure AD."
+$message = "Waiting to allow the custom $($customRoleObject.name) role to provision in Azure AD."
 $customRoleName = $customRoleObject.name 
 do {
     Start-Sleep -Seconds 5
