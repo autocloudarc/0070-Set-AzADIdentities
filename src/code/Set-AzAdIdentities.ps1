@@ -68,6 +68,7 @@ The outputs generated from this script includes:
 
 CONTRIBUTORS
 1. Preston K. Parsard
+2. Robert Lightner
 
 LEGAL DISCLAIMER:
 This Sample Code is provided for the purpose of illustration only and is not intended to be used in a production environment. 
@@ -219,7 +220,7 @@ function Add-AzIdentities
     $plainTextPw = $adminCred.GetNetworkCredential().Password
     $securePassword = ConvertTo-SecureString -String $plainTextPw -AsPlainText -Force
     $tenantDomain = ((Get-AzureADTenantDetail).VerifiedDomains | Where-Object {$_._Default -eq 'True'}).Name 
-    $waitForSeconds = 30
+    $waitForSeconds = 10
 
     if (-not($reset))
     {
@@ -267,7 +268,14 @@ function Add-AzIdentities
                 if (($azUser.rbacType -eq $rbacTypeCustom) -and ($azUser.rbacRole -eq $customRole))
                 {
                     $roleDescription = $azUser.rbacRole + " Assignment"
-                    New-AzRoleAssignment -ObjectId $groupObjectId -RoleDefinitionName $azUser.rbacRole -Scope $scopeId -Description $roleDescription -Verbose
+                    $result = @{}
+                    while ($result.count -eq 0)
+                    {
+                        $result = New-AzRoleAssignment -ObjectId $groupObjectId -RoleDefinitionName $azUser.rbacRole -Scope $scopeId -Description $roleDescription
+                        # Wait for $waitTime seconds
+                        Write-Output "Waiting $waitTime seconds for Role Assignment - $($azUser.rbacRole) at $subscriptiohScope..."
+                        Start-Sleep -Seconds $waitTime -Verbose
+                    }
                 } # end if
                 else
                 {
@@ -275,7 +283,14 @@ function Add-AzIdentities
                     foreach ($role in $roleList)
                     {
                         $roleDescr = $role + " Assignment"
-                        New-AzRoleAssignment -ObjectId $groupObjectId -RoleDefinitionName $role -Scope $scopeId -Description $roleDescr -Verbose
+                        $result = @{}
+                        while ($result.count -eq 0)
+                        {
+                            $result = New-AzRoleAssignment -ObjectId $groupObjectId -RoleDefinitionName $role -Scope $scopeId -Description $roleDescr
+                            # Wait for $waitTime seconds
+                            Write-Output "Waiting $waitTime seconds for Role Assignment - $role at $subscriptiohScope..."
+                            Start-Sleep -Seconds $waitTime -Verbose
+                        }
                     } # end foreach
                 } # end else
             } # end if
