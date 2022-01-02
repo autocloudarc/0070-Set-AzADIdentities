@@ -46,6 +46,9 @@ Placehoder username for which the secure password for all the identities that wi
 .PARAMETER defaultSubId
 Used to set/reset placehoder default subscription ID value of: 11111111-1111-1111-1111-111111111111 to protect confidentiality of previous subscription id from a previously executed script.
 
+.PARAMETER defaultSubScope
+Used to set/reset placehoder default subscription scope value of: /subscriptions/11111111-1111-1111-1111-111111111111 for a management group scope, to protect confidentiality of previous subscription id from a previously executed script.
+
 .PARAMETER reset
 Resets the directory to it's original state by removing the provisioned identities and role assignments, and is useful for dev/test scenarios or when developing or enhancing this script.
 
@@ -116,6 +119,7 @@ Param
     [array]$azUsers = (Import-Csv -path $pathToIdentitiesFile),
     [string]$adminUserName = "adm.azure.user",
     [string]$defaultSubId = "11111111-1111-1111-1111-111111111111",
+    [string]$defaultSubScope = "/subscriptions/11111111-1111-1111-1111-111111111111",
     [switch]$reset
 ) # end param
 
@@ -218,7 +222,7 @@ function Add-AzIdentities
     $plainTextPw = $adminCred.GetNetworkCredential().Password
     $securePassword = ConvertTo-SecureString -String $plainTextPw -AsPlainText -Force
     $tenantDomain = ((Get-AzureADTenantDetail).VerifiedDomains | Where-Object {$_._Default -eq 'True'}).Name 
-    $waitForSeconds = 10
+    $waitForSeconds = 20
 
     if (-not($reset))
     {
@@ -239,7 +243,7 @@ function Add-AzIdentities
             do {
                 $currentGroup = New-AzADGroup -DisplayName $azUser.aadSecurityGroup -MailNickName (($azUser.aadSecurityGroup).replace(" ","")) -Description $azUser.rbacRole -ErrorAction SilentlyContinue
                 $groupObjectId = (Get-AzAdGroup -SearchString $azUser.aadSecurityGroup).Id
-                if (-not($null -eq $groupObjectId))
+                if ($groupObjectId)
                 {
                     $groupCreated = $true
                 } # end if  
@@ -252,13 +256,18 @@ function Add-AzIdentities
             $userCreated = $false
             do {
                 $currentUser = New-AzADUser -DisplayName $azUser.displayName -UserPrincipalName $upn -Password $securePassword -MailNickName $azUser.userName -ErrorAction SilentlyContinue
-                if (-not($null -eq $currentUser.UserPrincipalName))
+                if ($currentUser.UserPrincipalName)
                 {
                     $userCreated = $true
                 } # end if
+                Start-Sleep -Seconds $waitForSeconds
             } #end Do
             Until ($userCreated)
-            Add-AzADGroupMember -MemberUserPrincipalName $upn -TargetGroupDisplayName $azUser.aadSecurityGroup -Verbose
+            # $members = @()
+            [array]$members = (Get-AzADUser -UserPrincipalName $upn).id 
+            # https://docs.microsoft.com/en-us/powershell/module/az.resources/add-azadgroupmember?view=azps-7.0.0
+            Add-AzADGroupMember -TargetGroupObjectId $groupObjectId -MemberObjectId $members -Verbose 
+
             $findCommas = $null
             if ($azUser.tenantRole -eq 'false')
             {
@@ -270,9 +279,9 @@ function Add-AzIdentities
                     while ($result.count -eq 0)
                     {
                         $result = New-AzRoleAssignment -ObjectId $groupObjectId -RoleDefinitionName $azUser.rbacRole -Scope $scope -Description $roleDescription
-                        # Wait for $waitTime seconds
-                        Write-Output "Waiting $waitTime seconds for Role Assignment - $($azUser.rbacRole) at $subscriptiohScope..."
-                        Start-Sleep -Seconds $waitTime -Verbose
+                        # Wait for $waitForSeconds seconds
+                        Write-Output "Waiting $waitForSeconds seconds for Role Assignment - $($azUser.rbacRole) at $subscriptiohScope..."
+                        Start-Sleep -Seconds $waitForSeconds -Verbose
                     }
                 } # end if
                 else
@@ -285,9 +294,9 @@ function Add-AzIdentities
                         while ($result.count -eq 0)
                         {
                             $result = New-AzRoleAssignment -ObjectId $groupObjectId -RoleDefinitionName $role -Scope $scope -Description $roleDescr
-                            # Wait for $waitTime seconds
-                            Write-Output "Waiting $waitTime seconds for Role Assignment - $role at $subscriptiohScope..."
-                            Start-Sleep -Seconds $waitTime -Verbose
+                            # Wait for $waitForSeconds seconds
+                            Write-Output "Waiting $waitForSeconds seconds for Role Assignment - $role at $subscriptiohScope..."
+                            Start-Sleep -Seconds $waitForSeconds -Verbose
                         }
                     } # end foreach
                 } # end else
@@ -395,7 +404,7 @@ $tenantId = (Get-AzSubscription -SubscriptionName $Subscription).TenantId
 $scopes = @("S","M")
 do
 {
-    [string]$scopeOption = "At what scope would you like to assign roles to? Enter 'S' for current [S]ubscription or 'M' for a [M]anagment Group that will be selected later [S|M]"
+    [string]$scopeOption = Read-Host "At what scope would you like to assign roles to? Enter 'S' for current [S]ubscription or 'M' for a [M]anagment Group that will be selected later [S|M]"
 } 
 Until ($scopeOption -in $scopes)
 
@@ -408,7 +417,7 @@ if ($scopeOption -eq "M")
     {
         Write-Output "A management group hierarchy has not yet been defined for this tenant, so the Role-Based-Access-Control scope option will be changed to [S]ubscription"
         $scopeOption = "S"
-        $scope = "/subscription/$subscriptionId"
+        $scope = "/subscriptions/$subscriptionId"
     } # end if
     else 
     {
@@ -419,12 +428,13 @@ if ($scopeOption -eq "M")
             $mgtGroupId = (Get-AzManagementGroup -GroupName $mgtGroup).Id
         } #end Do
         Until ($mgtGroup -in $mgtGroupList)
-        $scope = $mgtGroupId
+        # https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-powershell
+        $scope = "/providers/Microsoft.Management/managementGroups/$mgtGroup"
     } # end else
 }
 else 
 {
-    $scope = "/subscription/$subscriptionId"
+    $scope = "/subscriptions/$subscriptionId"
 }
 
 #endregion
@@ -457,10 +467,22 @@ $initializedRoleContent = $customRoleContent.Replace($currentSubId,$defaultSubId
 $targetSubId = $subscriptionId
 Write-Output "The custom role definition that will be added to the subscription is shown below"
 $initializedRoleContent
-Write-Output "Now we will update the default place-holder subscription id of $defaultSubId with your current subscription id of: $targetSubId"
-
-# Replace the default subscription id with the current subscription id
-$updatedRoleContent = $initializedRoleContent.Replace($defaultSubId,$targetSubId)
+Switch ($scopeOption)
+{
+    "S" 
+    {
+        Write-Output "Now we will update the default place-holder subscription id of $defaultSubId with your current subscription id of: $targetSubId"
+        # Replace the default subscription id with the current subscription id
+        $updatedRoleContent = $initializedRoleContent.Replace($defaultSubId,$targetSubId)
+    }
+    "M" 
+    {
+        Write-Output "Now we will update the default place-holder subscription id of $defaultSubScope with your selected management group id of: $scope"
+        # Replace the default subscription scope with the selected management group scope
+        $updatedRoleContent = $initializedRoleContent.Replace($defaultSubScope,$scope)
+    }
+    default { Write-Output "`$ScopeOption must be either 'S' or 'M'. Exiting script"; Exit-PSSession }
+}
 
 # Write the updated role definition back out to the file system
 $updatedRoleContent | Out-File -FilePath $customRolePath -Force
