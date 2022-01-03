@@ -1,10 +1,10 @@
 ﻿id,prefix,firstName,lastName,displayName,userName,aadSecurityGroup,rbacRole,rbacType,tenantRole
-1,adm,Alice,Alpha,Alice Alpha,adm.alice.alpha,AdatumCloudOps,AdatumVmOperator,Custom,false
-2,adm,Benjamin,Bravo,Benjamin Bravo,adm.benjamin.bravo,AdatumSecurityAdmins,Security Admin,Built-in,false
-3,adm,Chase,Charlie,Chase Charlie,adm.chase.charlie,AdatumCloudAdmins,Owner,Built-in,false
-4,adm,David,Delta,David Delta,adm.david.delta,AdatumMonitoringAdmins,Log Analytics Contributor,Built-in,false
-5,adm,Edward,Echo,Edward Echo,adm.edward.echo,AdatumMonitoringOps,Log Analytics Reader,Built-in,false
-6,adm,Francis,Foxtrot,Francis Foxtrot,adm.francis.foxtrot,AdatumNetworkAdmins,Network Contributor,Built-in,false
+1,adm,Alexy,Alpha,Alexy Alpha,adm.alexy.alpha,AdatumCloudOps,AdatumVmOperator,Custom,false
+2,adm,Boris,Bravo,Boris Bravo,adm.boris.bravo,AdatumSecurityAdmins,Security Admin,Built-in,false
+3,adm,Chinatsu,Charlie,Chinatsu Charlie,adm.chinatsu.charlie,AdatumCloudAdmins,Owner,Built-in,false
+4,adm,Dubaku,Delta,Dubaku Delta,adm.dubaku.delta,AdatumMonitoringAdmins,Log Analytics Contributor,Built-in,false
+5,adm,Elizaveta,Echo,Elizaveta Echo,adm.elizaveta.echo,AdatumMonitoringOps,Log Analytics Reader,Built-in,false
+6,adm,Feng,Foxtrot,Feng Foxtrot,adm.feng.foxtrot,AdatumNetworkAdmins,Network Contributor,Built-in,false
 7,adm,Gina,Golf,Gina Golf,adm.gina.golf,AdatumInfraAdmins,"Virtual Machine Contributor,Storage Account Contributor,Backup Operator",Built-in,false
 8,adm,Hanna,Hotel,Hanna Hotel,adm.hanna.hotel,AdatumUserAdmins,User Administrator,Built-in,true
 9,adm,Irene,India,Irene India,adm.irene.india,AdatumGlobalAdmins,Global Administrator,Built-in,true
