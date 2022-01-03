@@ -272,9 +272,9 @@ function Add-AzIdentities
                     while ($result.count -eq 0)
                     {
                         $result = New-AzRoleAssignment -ObjectId $groupObjectId -RoleDefinitionName $azUser.rbacRole -Scope $scopeId -Description $roleDescription
-                        # Wait for $waitTime seconds
-                        Write-Output "Waiting $waitTime seconds for Role Assignment - $($azUser.rbacRole) at $subscriptiohScope..."
-                        Start-Sleep -Seconds $waitTime -Verbose
+                        # Wait for $WaitForSeconds seconds
+                        Write-Output "Waiting $WaitForSeconds seconds for Role Assignment - $($azUser.rbacRole) at $subscriptiohScope..."
+                        Start-Sleep -Seconds $WaitForSeconds -Verbose
                     }
                 } # end if
                 else
@@ -287,9 +287,9 @@ function Add-AzIdentities
                         while ($result.count -eq 0)
                         {
                             $result = New-AzRoleAssignment -ObjectId $groupObjectId -RoleDefinitionName $role -Scope $scopeId -Description $roleDescr
-                            # Wait for $waitTime seconds
-                            Write-Output "Waiting $waitTime seconds for Role Assignment - $role at $subscriptiohScope..."
-                            Start-Sleep -Seconds $waitTime -Verbose
+                            # Wait for $WaitForSeconds seconds
+                            Write-Output "Waiting $WaitForSeconds seconds for Role Assignment - $role at $subscriptiohScope..."
+                            Start-Sleep -Seconds $WaitForSeconds -Verbose
                         }
                     } # end foreach
                 } # end else
@@ -392,24 +392,6 @@ Until ($Subscription -in (Get-AzSubscription).Name)
 Select-AzSubscription -SubscriptionName $Subscription -Verbose
 $subscriptionId = (Select-AzSubscription -SubscriptionName $Subscription).Subscription.id
 $tenantId = (Get-AzSubscription -SubscriptionName $Subscription).TenantId
-
-# List and select management groups
-$mgtGroupList = (Get-AzManagementGroup).Name
-
-if ($mgtGroupList -eq 0)
-{
-    Write-Output "A management group hierarchy has not yet been defined for this tenant, so the Role-Based-Access-Control scope option will be changed to [S]ubscription"
-} # end if
-else 
-{
-    do
-    {
-        $mgtGroupList
-        [string]$mgtGroup = Read-Host "Please enter your management group name to which you would like to scope Role Based Access Controls for these identities, i.e. [azr-dev-mgp-01]"
-        $mgtGroupId = (Get-AzManagementGroup -GroupName $mgtGroup).Id
-    } #end Do
-    Until ($mgtGroup -in $mgtGroupList)
-} # end else
 
 #endregion
 
