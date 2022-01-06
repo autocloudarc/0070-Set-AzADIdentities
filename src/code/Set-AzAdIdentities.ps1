@@ -220,7 +220,7 @@ function Add-AzIdentities
     $plainTextPw = $adminCred.GetNetworkCredential().Password
     $securePassword = ConvertTo-SecureString -String $plainTextPw -AsPlainText -Force
     $tenantDomain = ((Get-AzureADTenantDetail).VerifiedDomains | Where-Object {$_._Default -eq 'True'}).Name 
-    $waitForSeconds = 10
+    $waitForSeconds = 20
 
     if (-not($reset))
     {
@@ -260,7 +260,10 @@ function Add-AzIdentities
                 } # end if
             } #end Do
             Until ($userCreated)
-            Add-AzADGroupMember -MemberUserPrincipalName $upn -TargetGroupDisplayName $azUser.aadSecurityGroup -Verbose
+            [array]$members = (Get-AzADUser -UserPrincipalName $upn).id 
+            # https://docs.microsoft.com/en-us/powershell/module/az.resources/add-azadgroupmember?view=azps-7.0.0
+            Add-AzADGroupMember -TargetGroupObjectId $groupObjectId -MemberObjectId $members -Verbose 
+
             $findCommas = $null
             if ($azUser.tenantRole -eq 'false')
             {
@@ -271,9 +274,9 @@ function Add-AzIdentities
                     $result = @{}
                     while ($result.count -eq 0)
                     {
-                        $result = New-AzRoleAssignment -ObjectId $groupObjectId -RoleDefinitionName $azUser.rbacRole -Scope $scopeId -Description $roleDescription
+                        $result = New-AzRoleAssignment -ObjectId $groupObjectId -RoleDefinitionName $azUser.rbacRole -Scope $scopeId -Description $roleDescription -ErrorAction SilentlyContinue
                         # Wait for $WaitForSeconds seconds
-                        Write-Output "Waiting $WaitForSeconds seconds for Role Assignment - $($azUser.rbacRole) at $subscriptiohScope..."
+                        Write-Output "Waiting $WaitForSeconds seconds for Role Assignment - $($azUser.rbacRole) at $subscriptionScope..."
                         Start-Sleep -Seconds $WaitForSeconds -Verbose
                     }
                 } # end if
@@ -286,7 +289,7 @@ function Add-AzIdentities
                         $result = @{}
                         while ($result.count -eq 0)
                         {
-                            $result = New-AzRoleAssignment -ObjectId $groupObjectId -RoleDefinitionName $role -Scope $scopeId -Description $roleDescr
+                            $result = New-AzRoleAssignment -ObjectId $groupObjectId -RoleDefinitionName $role -Scope $scopeId -Description $roleDescr -ErrorAction SilentlyContinue
                             # Wait for $WaitForSeconds seconds
                             Write-Output "Waiting $WaitForSeconds seconds for Role Assignment - $role at $subscriptiohScope..."
                             Start-Sleep -Seconds $WaitForSeconds -Verbose
@@ -310,9 +313,9 @@ function Add-AzIdentities
         {
             $upn = $azUserReset.userName + "@" + $tenantDomain
             # https://docs.microsoft.com/en-us/powershell/module/az.resources/remove-azadgroup?view=azps-4.6.1
-            Remove-AzADGroup -DisplayName $azUserReset.aadSecurityGroup -Force -Verbose
+            Remove-AzADGroup -DisplayName $azUserReset.aadSecurityGroup -Verbose
             # https://docs.microsoft.com/en-us/powershell/module/az.resources/remove-azaduser?view=azps-4.6.1
-            Remove-AzADUser -UserPrincipalName $upn -PassThru -Force -Verbose
+            Remove-AzADUser -UserPrincipalName $upn -PassThru -Verbose
         } # end foreach
         # Removes the custom role definition from the subscription as part of cleanup.
         Write-Output "You must manually remove any role assignments for the $customRole as well as remove this custom role $customRole manually from the Azure Portal at https://portal.azure.com"
@@ -502,7 +505,7 @@ Until ($cleanupAzureADResponse -eq "Y" -OR $cleanupAzureADResponse -eq "YES" -OR
 If ($cleanupAzureADResponse -in @('Y', 'YES'))
 {
     Write-Warning "Removing previously provisioned users and groups from Azure AD tenant $tenantId."
-    Add-AzIdentities -azUsers $azUsers -adminCred $adminCred -subscriptionId $subscriptionId -tenantId $tenantId -mgtGroupId $mgtGroupId -scope $scope -reset -Verbose
+    Add-AzIdentities -azUsers $azUsers -adminCred $adminCred -tenantId $tenantId -subscriptionId $subscriptionId -reset -Verbose
 } #end condition
 else
 {
