@@ -268,6 +268,8 @@ function Add-AzIdentities
                 }
                 else 
                 {
+                    
+                    $roleId = (Get-AzureADMSRoleDefinition | Where-Object {$_.DisplayName -match $($azUser.rbacRole)}).id
                     New-AzADGroup -DisplayName $azUser.aadSecurityGroup -MailNickName (($azUser.aadSecurityGroup).replace(" ","")) -Description $azUser.rbacRole -IsAssignableToRole -SecurityEnabled -ErrorAction SilentlyContinue
                 }
                 $groupObjectId = (Get-AzAdGroup -SearchString $azUser.aadSecurityGroup).Id
@@ -277,6 +279,7 @@ function Add-AzIdentities
                 } # end if  
                 Start-Sleep -Seconds $waitForSeconds           
             } until ($groupCreated)
+            New-AzureADMSRoleAssignment -RoleDefinitionId $roleId -PrincipalId $groupObjectId -Verbose
             
             # task-item: Add group to administrative unit
             Add-AzureADMSAdministrativeUnitMember -Id $adminUnitId -RefObjectId $groupObjectId -Verbose
@@ -299,8 +302,10 @@ function Add-AzIdentities
             Add-AzureADMSAdministrativeUnitMember -Id $adminUnitId -RefObjectId $currentUser.id -ErrorAction SilentlyContinue -Verbose
 
             # https://docs.microsoft.com/en-us/powershell/module/az.resources/add-azadgroupmember?view=azps-7.0.0
-            Add-AzADGroupMember -TargetGroupObjectId $groupObjectId -MemberObjectId $members -Verbose 
-
+            if ($members.count -gt 0)
+            {
+                Add-AzADGroupMember -TargetGroupObjectId $groupObjectId -MemberObjectId $members -Verbose 
+            }
             $findCommas = $null
             if ($azUser.tenantRole -eq 'false')
             {
