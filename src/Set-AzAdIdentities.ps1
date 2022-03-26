@@ -270,7 +270,7 @@ function Add-AzIdentities
                 {                   
                     New-AzADGroup -DisplayName $azUser.aadSecurityGroup -MailNickName (($azUser.aadSecurityGroup).replace(" ","")) -Description $azUser.rbacRole -IsAssignableToRole -SecurityEnabled -ErrorAction SilentlyContinue
                 }
-                $groupObjectId = (Get-AzAdGroup -SearchString $azUser.aadSecurityGroup).Id
+                [string]$groupObjectId = (Get-AzAdGroup -SearchString $azUser.aadSecurityGroup).Id[0]
                 if (-not($null -eq $groupObjectId))
                 {
                     $groupCreated = $true
