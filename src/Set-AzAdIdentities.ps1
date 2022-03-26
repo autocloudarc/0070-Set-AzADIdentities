@@ -49,6 +49,12 @@ Used to set/reset placehoder default subscription ID value of: 11111111-1111-111
 .PARAMETER reset
 Resets the directory to it's original state by removing the provisioned identities and role assignments, and is useful for dev/test scenarios or when developing or enhancing this script.
 
+.PARAMETER adminUnitname
+The name of the administrative unit that will be created to contain the new users and groups.
+
+.PARAMETER adminUnitDescription
+The description of the administrative unit that will be created to contain the new users and groups.
+
 .EXAMPLE
 . .\Set-AzIdentities.ps1 -AzureEnvironment AzureUSGovernment -Verbose
 Provisions users and groups into the AzureUSGovernment cloud
@@ -118,7 +124,6 @@ Param
     [string]$defaultSubId = "11111111-1111-1111-1111-111111111111",
     [string]$adminUnitName = "poc-adu-01",
     [string]$adminUnitDescription = "PoC Administrative Unit",
-    [string]
     [switch]$reset
 ) # end param
 
