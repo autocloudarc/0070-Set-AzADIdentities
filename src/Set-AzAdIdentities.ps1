@@ -367,7 +367,9 @@ function Add-AzIdentities
             if ($azUserReset.rbacType -eq "Custom")
             {
                 $customRoleId = Get-AzRoleDefinition -Name $azUserReset.rbacRole
-                Remove-AzRoleDefinition -Id $customRoleId -PassThru -Verbose 
+                do {
+                    Remove-AzRoleDefinition -Id $customRoleId -PassThru -Verbose 
+                } until ($null -eq (Get-AzRoleDefinition -Name $azUserReset.rbacRole))
             }
         } # end foreach
         # Removes the custom role definition from the subscription as part of cleanup.
