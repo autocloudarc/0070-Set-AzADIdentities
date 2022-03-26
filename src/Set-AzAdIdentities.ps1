@@ -10,7 +10,7 @@ Using Namespace System.Runtime.InteropServices # For Azure AD service principals
 Provisions Azure AD identities and roles for role based access control to the Azure directory and subscription resources.
 
 .DESCRIPTION
-This script creates a set of users, groups and applies roles to the new groups based on a consolidated list of identities and roles that are pre-defined in a CSV file.
+This script creates a set of users and groups within an administrative unit, and applies roles to the new groups based on a consolidated list of identities and roles that are pre-defined in a CSV file.
 
 
 PRE-REQUISITES:
@@ -109,13 +109,16 @@ Param
 (
     [string] $PSModuleRepository = "PSGallery",
     # Title for transcipt header
-    [string]$label = "PROVISION AZURE AD IDENTITIES AND ROLES TO AN EXISTING TENANT",
+    [string]$label = "PROVISION AZURE AD IDENTITIES AND ROLES TO AN EXISTING TENANT WITHIN A NEW ADMINISTRATIVE UNIT",
     # Separator width in number of characters for transcript header/footer
     [int]$headerCharCount = 200,
     [string]$pathToIdentitiesFile = ".\input\identities.csv",
     [array]$azUsers = (Import-Csv -path $pathToIdentitiesFile),
     [string]$adminUserName = "adm.azure.user",
     [string]$defaultSubId = "11111111-1111-1111-1111-111111111111",
+    [string]$adminUnitName = "poc-adu-01",
+    [string]$adminUnitDescription = "PoC Administrative Unit",
+    [string]
     [switch]$reset
 ) # end param
 
@@ -125,6 +128,11 @@ $ErrorActionPreference = 'Continue'
 $BeginTimer = Get-Date -Verbose
 
 $PSBoundParameters
+
+$adminUnit = @{
+    name = $adminUnitName
+    description = $adminUnitDescription
+}
 
 #region Environment setup
 # Use TLS 1.2 to support Nuget provider
@@ -207,7 +215,9 @@ function Add-AzIdentities
         [string]$tenantId,
         [parameter(Mandatory)]
         [string]$subscriptionId,
-        [switch]$reset
+        [switch]$reset,
+        [parameter(Mandatory)]
+        [hashtable]$adminiUnit
     ) # end param
 
     # https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-powershell
@@ -222,10 +232,18 @@ function Add-AzIdentities
     $tenantDomain = ((Get-AzureADTenantDetail).VerifiedDomains | Where-Object {$_._Default -eq 'True'}).Name 
     $waitForSeconds = 20
 
+    # task-item: Create administrative unit if required
+    $currentAdminUnit = Get-AzureADMSAdministrativeUnit -Id $adminUnitId -ErrorAction SilentlyContinue -Verbose
+    if (-not($currentAdminUnit))
+    {
+        $adminUnit = New-AzureADMSAdministrativeUnit -Description $adminUnit.description -DisplayName $adminUnit.name -Verbose
+        $adminUnitId = $adminUnit.id 
+    }
+
     if (-not($reset))
     {
         foreach ($azUser in $azUsers)
-        {
+        {        
             if ($azUser.rbacType -eq "Custom")
             {
                 $rbacTypeCustom = $azUser.rbacType 
@@ -247,7 +265,10 @@ function Add-AzIdentities
                 } # end if  
                 Start-Sleep -Seconds $waitForSeconds           
             } until ($groupCreated)
-          
+            
+            # task-item: Add group to administrative unit
+            Add-AzureADMSAdministrativeUnitMember -Id $adminUnitId -RefObjectId $groupObjectId -Verbose
+
             $azAdTenantSuffix = "@" + $tenantDomain
             $upn = $azUser.userName + $azAdTenantSuffix
             # https://docs.microsoft.com/en-us/powershell/module/az.resources/new-azaduser?view=azps-4.6.1
@@ -261,6 +282,10 @@ function Add-AzIdentities
             } #end Do
             Until ($userCreated)
             [array]$members = (Get-AzADUser -UserPrincipalName $upn).id 
+
+            # task-item: Add user to administrative unit
+            Add-AzureADMSAdministrativeUnitMember -Id $adminUnitId -RefObjectId $currentUser.id -ErrorAction SilentlyContinue -Verbose
+
             # https://docs.microsoft.com/en-us/powershell/module/az.resources/add-azadgroupmember?view=azps-7.0.0
             Add-AzADGroupMember -TargetGroupObjectId $groupObjectId -MemberObjectId $members -Verbose 
 
@@ -318,6 +343,8 @@ function Add-AzIdentities
             Remove-AzADUser -UserPrincipalName $upn -PassThru -Verbose
         } # end foreach
         # Removes the custom role definition from the subscription as part of cleanup.
+        # Remove Administrative Unit
+        Remove-AzureADMSAdministrativeUnit -Id $adminUnitId -Verbose
         Write-Output "You must manually remove any role assignments for the $customRole as well as remove this custom role $customRole manually from the Azure Portal at https://portal.azure.com"
     } # end else
 } # end function
@@ -456,7 +483,7 @@ do {
 # https://docs.microsoft.com/en-us/powershell/module/azuread/new-azureadgroup?view=azureadps-2.0
 # https://docs.microsoft.com/en-us/powershell/module/azuread/new-azureaduser?view=azureadps-2.0
 
-Add-AzIdentities -azUsers $azUsers -adminCred $adminCred -tenantId $tenantId -subscriptionId $subscriptionId -Verbose
+Add-AzIdentities -azUsers $azUsers -adminCred $adminCred -tenantId $tenantId -subscriptionId $subscriptionId -adminUnit $adminiUnit -Verbose
 
 $StopTimerWoFw = Get-Date -Verbose
 Write-Output "Calculating elapsed time..."
@@ -505,7 +532,7 @@ Until ($cleanupAzureADResponse -eq "Y" -OR $cleanupAzureADResponse -eq "YES" -OR
 If ($cleanupAzureADResponse -in @('Y', 'YES'))
 {
     Write-Warning "Removing previously provisioned users and groups from Azure AD tenant $tenantId."
-    Add-AzIdentities -azUsers $azUsers -adminCred $adminCred -tenantId $tenantId -subscriptionId $subscriptionId -reset -Verbose
+    Add-AzIdentities -azUsers $azUsers -adminCred $adminCred -tenantId $tenantId -subscriptionId $subscriptionId -reset -adminUnit $adminiUnit -Verbose
 } #end condition
 else
 {
