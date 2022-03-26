@@ -339,7 +339,7 @@ function Add-AzIdentities
             {
                 $rbacRole = $azUser.rbacRole
                 $roleId = (Get-AzureADMSRoleDefinition | Where-Object {$_.DisplayName -match $rbacRole}).id
-                New-AzureADMSRoleAssignment -RoleDefinitionId $roleId -PrincipalId $groupObjectId -Verbose
+                New-AzureADMSRoleAssignment -RoleDefinitionId $roleId -PrincipalId $groupObjectId -DirectoryScopeId '/' -Verbose
             }
             # task-item: Add directory roles and remove after testing
             <#
