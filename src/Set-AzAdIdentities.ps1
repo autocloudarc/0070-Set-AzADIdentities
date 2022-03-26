@@ -238,12 +238,12 @@ function Add-AzIdentities
     $waitForSeconds = 20
 
     # task-item: Create administrative unit if required
-    $au = Get-AzureADMSAdministrativeUnit | Where-Object {$_.displayName -eq $adminUnit.name} 
-    if ($null -eq $au.displayName)
+    $adu = Get-AzureADMSAdministrativeUnit | Where-Object {$_.displayName -eq $adminUnit.name} 
+    if ($null -eq $adu.displayName)
     {
-        $adminUnit = New-AzureADMSAdministrativeUnit -Description $adminUnit.description -DisplayName $adminUnit.name -ErrorAction SilentlyContinue -Verbose
+        $adu = New-AzureADMSAdministrativeUnit -Description $adminUnit.description -DisplayName $adminUnit.name -ErrorAction SilentlyContinue -Verbose
     }
-    $adminUnitId = $adminUnit.id
+    $adminUnitId = $adu.id
 
     if (-not($reset))
     {
