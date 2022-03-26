@@ -124,7 +124,6 @@ Param
     [string]$defaultSubId = "11111111-1111-1111-1111-111111111111",
     [string]$adminUnitName = "poc-adu-01",
     [string]$adminUnitDescription = "PoC Administrative Unit",
-    [string]$tenantId = "1561a00a-6d2f-4867-af27-c6bd5d016f7d", # task-item: add param
     [switch]$reset
 ) # end param
 
@@ -239,12 +238,12 @@ function Add-AzIdentities
     $waitForSeconds = 20
 
     # task-item: Create administrative unit if required
-    $currentAdminUnit = Get-AzureADMSAdministrativeUnit -Id $adminUnitId -ErrorAction SilentlyContinue -Verbose
-    if (-not($currentAdminUnit))
+    $au = Get-AzureADMSAdministrativeUnit | Where-Object {$_.displayName -eq $adminUnit.name} 
+    if ($null -eq $au.displayName)
     {
-        $adminUnit = New-AzureADMSAdministrativeUnit -Description $adminUnit.description -DisplayName $adminUnit.name -Verbose
-        $adminUnitId = $adminUnit.id 
+        $adminUnit = New-AzureADMSAdministrativeUnit -Description $adminUnit.description -DisplayName $adminUnit.name -ErrorAction SilentlyContinue -Verbose
     }
+    $adminUnitId = $adminUnit.id
 
     if (-not($reset))
     {
@@ -413,7 +412,7 @@ Write-Output "Please see the open dialogue box in your browser to authenticate t
 # Clear any possible cached credentials for other subscriptions
 Clear-AzContext -PassThru -Force -Verbose
 
-Connect-AzAccount -Environment AzureCloud -TenantId $tenantId
+Connect-AzAccount -Environment AzureCloud
 
 # https://docs.microsoft.com/en-us/azure/azure-government/documentation-government-get-started-connect-with-ps
 # To connect to AzureUSGovernment, use:
@@ -427,8 +426,7 @@ Do
 Until ($Subscription -in (Get-AzSubscription).Name)
 Select-AzSubscription -SubscriptionName $Subscription -Verbose
 $subscriptionId = (Select-AzSubscription -SubscriptionName $Subscription).Subscription.id
-# task-item: comment for testing
-# $tenantId = (Get-AzSubscription -SubscriptionName $Subscription).TenantId
+$tenantId = (Get-AzSubscription -SubscriptionName $Subscription).TenantId
 
 #endregion
 
