@@ -267,10 +267,7 @@ function Add-AzIdentities
                     New-AzADGroup -DisplayName $azUser.aadSecurityGroup -MailNickName (($azUser.aadSecurityGroup).replace(" ","")) -Description $azUser.rbacRole -ErrorAction SilentlyContinue
                 }
                 else 
-                {
-                    
-                    $rbacRole = $azUser.rbacRole
-                    $roleId = (Get-AzureADMSRoleDefinition | Where-Object {$_.DisplayName -match $rbacRole}).id
+                {                   
                     New-AzADGroup -DisplayName $azUser.aadSecurityGroup -MailNickName (($azUser.aadSecurityGroup).replace(" ","")) -Description $azUser.rbacRole -IsAssignableToRole -SecurityEnabled -ErrorAction SilentlyContinue
                 }
                 $groupObjectId = (Get-AzAdGroup -SearchString $azUser.aadSecurityGroup).Id
@@ -280,8 +277,6 @@ function Add-AzIdentities
                 } # end if  
                 Start-Sleep -Seconds $waitForSeconds           
             } until ($groupCreated)
-            New-AzureADMSRoleAssignment -RoleDefinitionId $roleId -PrincipalId $groupObjectId -Verbose
-            
             # task-item: Add group to administrative unit
             Add-AzureADMSAdministrativeUnitMember -Id $adminUnitId -RefObjectId $groupObjectId -Verbose
 
@@ -340,6 +335,12 @@ function Add-AzIdentities
                     } # end foreach
                 } # end else
             } # end if
+            else
+            {
+                $rbacRole = $azUser.rbacRole
+                $roleId = (Get-AzureADMSRoleDefinition | Where-Object {$_.DisplayName -match $rbacRole}).id
+                New-AzureADMSRoleAssignment -RoleDefinitionId $roleId -PrincipalId $groupObjectId -Verbose
+            }
             # task-item: Add directory roles and remove after testing
             <#
             else
