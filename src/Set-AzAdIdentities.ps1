@@ -367,7 +367,7 @@ function Add-AzIdentities
             Remove-AzADUser -UserPrincipalName $upn -PassThru -Verbose
             if ($azUserReset.rbacType -eq "Custom")
             {
-                $customRoleId = Get-AzRoleDefinition -Name $azUserReset.rbacRole
+                $customRoleId = (Get-AzRoleDefinition -Name $azUserReset.rbacRole).id
                 do {
                     Remove-AzRoleDefinition -Id $customRoleId -PassThru -Verbose 
                 } until ($null -eq (Get-AzRoleDefinition -Name $azUserReset.rbacRole))
