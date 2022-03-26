@@ -302,10 +302,8 @@ function Add-AzIdentities
             {
                 Add-AzADGroupMember -TargetGroupObjectId $groupObjectId -MemberObjectId $members -Verbose 
             }
-            $findCommas = $null
             if ($azUser.tenantRole -eq 'false')
             {
-                $findCommas = ($azUser.rbacRole | Select-String -Pattern ',' -SimpleMatch)
                 if (($azUser.rbacType -eq $rbacTypeCustom) -and ($azUser.rbacRole -eq $customRole))
                 {
                     $roleDescription = $azUser.rbacRole + " Assignment"
@@ -349,7 +347,11 @@ function Add-AzIdentities
         {
             $upn = $azUserReset.userName + "@" + $tenantDomain
             $groupObjectId = (Get-AzADGroup -DisplayName $azUserReset.aadSecurityGroup).id
-            Remove-AzRoleAssignment -ObjectId $groupObjectId -RoleDefinitionName $azUserReset.rbacRole -PassThru -Verbose
+            $resetRoleList = ($azUserReset.rbacRole).Split(',')
+            foreach ($resetRole in $resetRoleList)
+            {
+                Remove-AzRoleAssignment -ObjectId $groupObjectId -RoleDefinitionName $resetRole -Scope $scopeId -PassThru -Verbose
+            }
             # https://docs.microsoft.com/en-us/powershell/module/az.resources/remove-azadgroup?view=azps-4.6.1
             Remove-AzADGroup -DisplayName $azUserReset.aadSecurityGroup -Verbose
             # https://docs.microsoft.com/en-us/powershell/module/az.resources/remove-azaduser?view=azps-4.6.1
