@@ -262,7 +262,14 @@ function Add-AzIdentities
             $groupCreated = $false
             # https://docs.microsoft.com/en-us/powershell/module/az.resources/new-azadgroup?view=azps-4.6.1
             do {
-                $currentGroup = New-AzADGroup -DisplayName $azUser.aadSecurityGroup -MailNickName (($azUser.aadSecurityGroup).replace(" ","")) -Description $azUser.rbacRole -ErrorAction SilentlyContinue
+                if ($azUser.tenantRole -eq 'false')
+                {
+                    New-AzADGroup -DisplayName $azUser.aadSecurityGroup -MailNickName (($azUser.aadSecurityGroup).replace(" ","")) -Description $azUser.rbacRole -ErrorAction SilentlyContinue
+                }
+                else 
+                {
+                    New-AzADGroup -DisplayName $azUser.aadSecurityGroup -MailNickName (($azUser.aadSecurityGroup).replace(" ","")) -Description $azUser.rbacRole -IsAssignableToRole -SecurityEnabled -ErrorAction SilentlyContinue
+                }
                 $groupObjectId = (Get-AzAdGroup -SearchString $azUser.aadSecurityGroup).Id
                 if (-not($null -eq $groupObjectId))
                 {
@@ -321,12 +328,14 @@ function Add-AzIdentities
                         {
                             $result = New-AzRoleAssignment -ObjectId $groupObjectId -RoleDefinitionName $role -Scope $scopeId -Description $roleDescr -ErrorAction SilentlyContinue
                             # Wait for $WaitForSeconds seconds
-                            Write-Output "Waiting $WaitForSeconds seconds for Role Assignment - $role at $subscriptiohScope..."
+                            Write-Output "Waiting $WaitForSeconds seconds for Role Assignment - $role at $subscriptionScope..."
                             Start-Sleep -Seconds $WaitForSeconds -Verbose
                         }
                     } # end foreach
                 } # end else
             } # end if
+            # task-item: Add directory roles and remove after testing
+            <#
             else
             {
                 # https://stackoverflow.com/questions/41960561/how-to-find-out-who-the-global-administrator-is-for-a-directory-to-which-i-belon
@@ -334,6 +343,7 @@ function Add-AzIdentities
                 # TASK-ITEM: Add the isAssignableToRole property to Groups to allow assignment to Azure AD Roles.
                 Write-Output "The users $upn as members of the $($azUser.aadSecurityGroup) will have to be added to the Azure AD tenant role of $($azUser.rbacRole) manually in the Azure portal https://portal.azure.com "
             } # end else
+            #>
             # Add role assignments
         } # end foreach
     } # end if
