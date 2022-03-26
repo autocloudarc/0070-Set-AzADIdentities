@@ -222,7 +222,7 @@ function Add-AzIdentities
         [string]$subscriptionId,
         [switch]$reset,
         [parameter(Mandatory)]
-        [hashtable]$adminiUnit
+        [hashtable]$adminUnit
     ) # end param
 
     # https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-powershell
