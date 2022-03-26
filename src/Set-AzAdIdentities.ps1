@@ -369,7 +369,7 @@ function Add-AzIdentities
             {
                 $customRoleId = (Get-AzRoleDefinition -Name $azUserReset.rbacRole).id
                 do {
-                    Remove-AzRoleDefinition -Id $customRoleId -PassThru -Verbose 
+                    Remove-AzRoleDefinition -Id $customRoleId -PassThru -Force -Verbose 
                 } until ($null -eq (Get-AzRoleDefinition -Name $azUserReset.rbacRole))
             }
         } # end foreach
