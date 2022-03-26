@@ -463,47 +463,54 @@ This password must be complex, at least 12 characters including 3 of the followi
 #region Add custom role
 # https://docs.microsoft.com/en-us/azure/role-based-access-control/custom-roles-powershell
 
-$customRolePath = ".\input\roleCustom-AdatumVmOperator.json"
-$subIdPattern = '\w{8}-\w{4}-\w{4}-\w{4}-\w{12}'
-$customRoleContent = Get-Content -Path $customRolePath
-($customRoleContent -match $subIdPattern)[0] -match $subIdPattern
-$currentSubId = $matches[0]
-$initializedRoleContent = $customRoleContent.Replace($currentSubId,$defaultSubId)
+if (-not($reset))
+{
+    $customRolePath = ".\input\roleCustom-AdatumVmOperator.json"
+    $subIdPattern = '\w{8}-\w{4}-\w{4}-\w{4}-\w{12}'
+    $customRoleContent = Get-Content -Path $customRolePath
+    ($customRoleContent -match $subIdPattern)[0] -match $subIdPattern
+    $currentSubId = $matches[0]
+    $initializedRoleContent = $customRoleContent.Replace($currentSubId,$defaultSubId)
 
-$targetSubId = $subscriptionId
-Write-Output "The custom role definition that will be added to the subscription is shown below"
-$initializedRoleContent
-Write-Output "Now we will update the default place-holder subscription id of $defaultSubId with your current subscription id of: $targetSubId"
+    $targetSubId = $subscriptionId
+    Write-Output "The custom role definition that will be added to the subscription is shown below"
+    $initializedRoleContent
+    Write-Output "Now we will update the default place-holder subscription id of $defaultSubId with your current subscription id of: $targetSubId"
 
-# Replace the default subscription id with the current subscription id
-$updatedRoleContent = $initializedRoleContent.Replace($defaultSubId,$targetSubId)
+    # Replace the default subscription id with the current subscription id
+    $updatedRoleContent = $initializedRoleContent.Replace($defaultSubId,$targetSubId)
 
-# Write the updated role definition back out to the file system
-$updatedRoleContent | Out-File -FilePath $customRolePath -Force
+    # Write the updated role definition back out to the file system
+    $updatedRoleContent | Out-File -FilePath $customRolePath -Force
 
-# Import the updated role definition to the current subscription
-New-AzRoleDefinition -InputFile $customRolePath -Verbose
-# Write the initialized role definition back out to the file system
-$initializedRoleContent | Out-File -FilePath $customRolePath -Force
-$customRoleObject = $initializedRoleContent | ConvertFrom-Json
-# Wait for 100 seconds to allow sufficient time for role to provision in Azure AD
-$s = 0
-$message = "Waiting to allow the custom $($customRoleObject.name) role to provision in Azure AD."
-$customRoleName = $customRoleObject.name 
-do {
-    Start-Sleep -Seconds 5
-    $s++
-    $today = Get-Date
-    "{0}`t{1}" -f @($today, $message)
-} until (((Get-AzRoleDefinition -Name $customRoleName).name) -eq ($customRoleName) -and ($s -eq 12))
-
+    # Import the updated role definition to the current subscription
+    New-AzRoleDefinition -InputFile $customRolePath -Verbose
+    # Write the initialized role definition back out to the file system
+    $initializedRoleContent | Out-File -FilePath $customRolePath -Force
+    $customRoleObject = $initializedRoleContent | ConvertFrom-Json
+    # Wait for 100 seconds to allow sufficient time for role to provision in Azure AD
+    $s = 0
+    $message = "Waiting to allow the custom $($customRoleObject.name) role to provision in Azure AD."
+    $customRoleName = $customRoleObject.name 
+    do {
+        Start-Sleep -Seconds 5
+        $s++
+        $today = Get-Date
+        "{0}`t{1}" -f @($today, $message)
+    } until (((Get-AzRoleDefinition -Name $customRoleName).name) -eq ($customRoleName) -and ($s -eq 12))
 #endregion
 
-# Create AD Users, Groups and Roles
-# https://docs.microsoft.com/en-us/powershell/module/azuread/new-azureadgroup?view=azureadps-2.0
-# https://docs.microsoft.com/en-us/powershell/module/azuread/new-azureaduser?view=azureadps-2.0
+    # Create AD Users, Groups and Roles
+    # https://docs.microsoft.com/en-us/powershell/module/azuread/new-azureadgroup?view=azureadps-2.0
+    # https://docs.microsoft.com/en-us/powershell/module/azuread/new-azureaduser?view=azureadps-2.0
 
-Add-AzIdentities -azUsers $azUsers -adminCred $adminCred -tenantId $tenantId -subscriptionId $subscriptionId -adminUnit $adminUnit -Verbose
+    Add-AzIdentities -azUsers $azUsers -adminCred $adminCred -tenantId $tenantId -subscriptionId $subscriptionId -adminUnit $adminUnit -Verbose
+}
+else 
+{
+    Write-Warning "Removing previously provisioned users and groups from Azure AD tenant $tenantId."
+    Add-AzIdentities -azUsers $azUsers -adminCred $adminCred -tenantId $tenantId -subscriptionId $subscriptionId -reset -adminUnit $adminUnit -Verbose
+}
 
 $StopTimerWoFw = Get-Date -Verbose
 Write-Output "Calculating elapsed time..."
@@ -537,26 +544,3 @@ else
     Write-Output "End of Script!"
     $header.SeparatorDouble
 } # end else
-
-#region cleanup
-# Cleanup AzureAD users and groups
-$cleanupAzureAD = "Would you like to cleanup the AzureAD directory by removing the previously provisioned users and groups now? [YES/NO | Y/N]"
-do
-{
-    $cleanupAzureADResponse = read-host $cleanupAzureAD
-    $cleanupAzureADResponse = $cleanupAzureADResponse.ToUpper()
-} # end do
-Until ($cleanupAzureADResponse -eq "Y" -OR $cleanupAzureADResponse -eq "YES" -OR $cleanupAzureADResponse -eq "N" -OR $cleanupAzureADResponse -eq "NO")
-
-# Exit if user does not want to continue
-If ($cleanupAzureADResponse -in @('Y', 'YES'))
-{
-    Write-Warning "Removing previously provisioned users and groups from Azure AD tenant $tenantId."
-    Add-AzIdentities -azUsers $azUsers -adminCred $adminCred -tenantId $tenantId -subscriptionId $subscriptionId -reset -adminUnit $adminUnit -Verbose
-} #end condition
-else
-{
-    # Terminate script
-    Write-Output "Skipping removal of previously provisioned users and groups from Azure AD tenant $tenantId"
-} # end else
-#endregion
