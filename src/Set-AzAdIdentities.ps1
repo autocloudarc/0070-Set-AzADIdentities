@@ -314,7 +314,7 @@ function Add-AzIdentities
                     {
                         $result = New-AzRoleAssignment -ObjectId $groupObjectId -RoleDefinitionName $azUser.rbacRole -Scope $scopeId -Description $roleDescription -ErrorAction SilentlyContinue
                         # Wait for $WaitForSeconds seconds
-                        Write-Output "Waiting $WaitForSeconds seconds for Role Assignment - $($azUser.rbacRole) at $subscriptionScope..."
+                        Write-Output "Waiting $WaitForSeconds seconds for Role Assignment - $($azUser.rbacRole) at $scopeId..."
                         Start-Sleep -Seconds $WaitForSeconds -Verbose
                     }
                 } # end if
@@ -329,7 +329,7 @@ function Add-AzIdentities
                         {
                             $result = New-AzRoleAssignment -ObjectId $groupObjectId -RoleDefinitionName $role -Scope $scopeId -Description $roleDescr -ErrorAction SilentlyContinue
                             # Wait for $WaitForSeconds seconds
-                            Write-Output "Waiting $WaitForSeconds seconds for Role Assignment - $role at $subscriptionScope..."
+                            Write-Output "Waiting $WaitForSeconds seconds for Role Assignment - $role at $scopeId..."
                             Start-Sleep -Seconds $WaitForSeconds -Verbose
                         }
                     } # end foreach
