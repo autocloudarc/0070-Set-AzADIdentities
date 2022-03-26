@@ -269,7 +269,8 @@ function Add-AzIdentities
                 else 
                 {
                     
-                    $roleId = (Get-AzureADMSRoleDefinition | Where-Object {$_.DisplayName -match $($azUser.rbacRole)}).id
+                    $rbacRole = $azUser.rbacRole
+                    $roleId = (Get-AzureADMSRoleDefinition | Where-Object {$_.DisplayName -match $rbacRole}).id
                     New-AzADGroup -DisplayName $azUser.aadSecurityGroup -MailNickName (($azUser.aadSecurityGroup).replace(" ","")) -Description $azUser.rbacRole -IsAssignableToRole -SecurityEnabled -ErrorAction SilentlyContinue
                 }
                 $groupObjectId = (Get-AzAdGroup -SearchString $azUser.aadSecurityGroup).Id
