@@ -339,19 +339,8 @@ function Add-AzIdentities
             {
                 $rbacRole = $azUser.rbacRole
                 $roleId = (Get-AzureADMSRoleDefinition | Where-Object {$_.DisplayName -match $rbacRole}).id
-                New-AzureADMSRoleAssignment -RoleDefinitionId $roleId -PrincipalId $groupObjectId -DirectoryScopeId '/' -Verbose
+                New-AzureADMSRoleAssignment -RoleDefinitionId $roleId -PrincipalId $groupObjectId -DirectoryScopeId '/' -ErrorAction SilentlyContinue -Verbose
             }
-            # task-item: Add directory roles and remove after testing
-            <#
-            else
-            {
-                # https://stackoverflow.com/questions/41960561/how-to-find-out-who-the-global-administrator-is-for-a-directory-to-which-i-belon
-                # https://docs.microsoft.com/en-us/azure/active-directory/roles/groups-create-eligible
-                # TASK-ITEM: Add the isAssignableToRole property to Groups to allow assignment to Azure AD Roles.
-                Write-Output "The users $upn as members of the $($azUser.aadSecurityGroup) will have to be added to the Azure AD tenant role of $($azUser.rbacRole) manually in the Azure portal https://portal.azure.com "
-            } # end else
-            #>
-            # Add role assignments
         } # end foreach
     } # end if
     else
