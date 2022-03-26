@@ -124,6 +124,7 @@ Param
     [string]$defaultSubId = "11111111-1111-1111-1111-111111111111",
     [string]$adminUnitName = "poc-adu-01",
     [string]$adminUnitDescription = "PoC Administrative Unit",
+    [string]$tenantId = "1561a00a-6d2f-4867-af27-c6bd5d016f7d", # task-item: add param
     [switch]$reset
 ) # end param
 
@@ -412,7 +413,7 @@ Write-Output "Please see the open dialogue box in your browser to authenticate t
 # Clear any possible cached credentials for other subscriptions
 Clear-AzContext -PassThru -Force -Verbose
 
-Connect-AzAccount -Environment AzureCloud
+Connect-AzAccount -Environment AzureCloud -TenantId $tenantId
 
 # https://docs.microsoft.com/en-us/azure/azure-government/documentation-government-get-started-connect-with-ps
 # To connect to AzureUSGovernment, use:
@@ -426,7 +427,8 @@ Do
 Until ($Subscription -in (Get-AzSubscription).Name)
 Select-AzSubscription -SubscriptionName $Subscription -Verbose
 $subscriptionId = (Select-AzSubscription -SubscriptionName $Subscription).Subscription.id
-$tenantId = (Get-AzSubscription -SubscriptionName $Subscription).TenantId
+# task-item: comment for testing
+# $tenantId = (Get-AzSubscription -SubscriptionName $Subscription).TenantId
 
 #endregion
 
@@ -488,7 +490,7 @@ do {
 # https://docs.microsoft.com/en-us/powershell/module/azuread/new-azureadgroup?view=azureadps-2.0
 # https://docs.microsoft.com/en-us/powershell/module/azuread/new-azureaduser?view=azureadps-2.0
 
-Add-AzIdentities -azUsers $azUsers -adminCred $adminCred -tenantId $tenantId -subscriptionId $subscriptionId -adminUnit $adminiUnit -Verbose
+Add-AzIdentities -azUsers $azUsers -adminCred $adminCred -tenantId $tenantId -subscriptionId $subscriptionId -adminUnit $adminUnit -Verbose
 
 $StopTimerWoFw = Get-Date -Verbose
 Write-Output "Calculating elapsed time..."
@@ -537,7 +539,7 @@ Until ($cleanupAzureADResponse -eq "Y" -OR $cleanupAzureADResponse -eq "YES" -OR
 If ($cleanupAzureADResponse -in @('Y', 'YES'))
 {
     Write-Warning "Removing previously provisioned users and groups from Azure AD tenant $tenantId."
-    Add-AzIdentities -azUsers $azUsers -adminCred $adminCred -tenantId $tenantId -subscriptionId $subscriptionId -reset -adminUnit $adminiUnit -Verbose
+    Add-AzIdentities -azUsers $azUsers -adminCred $adminCred -tenantId $tenantId -subscriptionId $subscriptionId -reset -adminUnit $adminUnit -Verbose
 } #end condition
 else
 {
