@@ -270,7 +270,7 @@ function Add-AzIdentities
                 {                   
                     New-AzADGroup -DisplayName $azUser.aadSecurityGroup -MailNickName (($azUser.aadSecurityGroup).replace(" ","")) -Description $azUser.rbacRole -IsAssignableToRole -SecurityEnabled -ErrorAction SilentlyContinue
                 }
-                [string]$groupObjectId = (Get-AzAdGroup -SearchString $azUser.aadSecurityGroup).Id[0]
+                $groupObjectId = (Get-AzAdGroup -SearchString $azUser.aadSecurityGroup).Id
                 if (-not($null -eq $groupObjectId))
                 {
                     $groupCreated = $true
@@ -350,7 +350,15 @@ function Add-AzIdentities
             $resetRoleList = ($azUserReset.rbacRole).Split(',')
             foreach ($resetRole in $resetRoleList)
             {
-                Remove-AzRoleAssignment -ObjectId $groupObjectId -RoleDefinitionName $resetRole -Scope $scopeId -PassThru -Verbose
+                if ($azUserReset.tenantRole)
+                {
+                    $scope = '/'
+                }
+                else 
+                {
+                    $scope = $scopeId
+                }
+                Remove-AzRoleAssignment -ObjectId $groupObjectId -RoleDefinitionName $resetRole -Scope $scope -PassThru -Verbose
             }
             # https://docs.microsoft.com/en-us/powershell/module/az.resources/remove-azadgroup?view=azps-4.6.1
             Remove-AzADGroup -DisplayName $azUserReset.aadSecurityGroup -Verbose
