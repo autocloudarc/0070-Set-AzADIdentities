@@ -122,9 +122,9 @@ Param
     [array]$azUsers = (Import-Csv -path $pathToIdentitiesFile),
     [string]$adminUserName = "adm.azure.user",
     [string]$defaultSubId = "11111111-1111-1111-1111-111111111111",
+    [switch]$reset,
     [string]$adminUnitName = "poc-adu-01",
-    [string]$adminUnitDescription = "PoC Administrative Unit",
-    [switch]$reset
+    [string]$adminUnitDescription = "PoC Administrative Unit"
 ) # end param
 
 $ErrorActionPreference = 'Continue'
