@@ -358,7 +358,7 @@ function Add-AzIdentities
                 {
                     $scope = $scopeId
                 }
-                Remove-AzRoleAssignment -ObjectId $groupObjectId -RoleDefinitionName $resetRole -Scope $scope -PassThru -Verbose
+                Remove-AzRoleAssignment -ObjectId $groupObjectId -RoleDefinitionName $resetRole -Scope $scope -PassThru -ErrorAction SilentlyContinue -Verbose
             }
             # https://docs.microsoft.com/en-us/powershell/module/az.resources/remove-azadgroup?view=azps-4.6.1
             Remove-AzADGroup -DisplayName $azUserReset.aadSecurityGroup -Verbose
