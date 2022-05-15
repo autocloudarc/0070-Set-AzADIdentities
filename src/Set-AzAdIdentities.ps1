@@ -345,6 +345,16 @@ function Add-AzIdentities
     {
         foreach ($azUserReset in $azUsers)
         {
+            if ($azUserReset.rbacType -eq "Custom")
+            {
+                $customRoleId = (Get-AzRoleDefinition -Name $azUserReset.rbacRole).id
+                do {
+                    Remove-AzRoleDefinition -Id $customRoleId -PassThru -Force -Verbose -ErrorAction SilentlyContinue 
+                    Write-Output "Waiting to completely remove custom role definition $($azUserReset.rbacRole)..."
+                    Start-Sleep -Seconds 10 
+                    $currentCustomRoleDefId = (Get-AzRoleDefinition -Name $azUserReset.rbacRole).id 
+                } until ($null -eq $currentCustomRoleDefId)
+            }
             $upn = $azUserReset.userName + "@" + $tenantDomain
             $groupObjectId = (Get-AzADGroup -DisplayName $azUserReset.aadSecurityGroup).id
             $resetRoleList = ($azUserReset.rbacRole).Split(',')
@@ -364,16 +374,6 @@ function Add-AzIdentities
             Remove-AzADGroup -DisplayName $azUserReset.aadSecurityGroup -Verbose
             # https://docs.microsoft.com/en-us/powershell/module/az.resources/remove-azaduser?view=azps-4.6.1
             Remove-AzADUser -UserPrincipalName $upn -PassThru -Verbose
-            if ($azUserReset.rbacType -eq "Custom")
-            {
-                $customRoleId = (Get-AzRoleDefinition -Name $azUserReset.rbacRole).id
-                do {
-                    Remove-AzRoleDefinition -Id $customRoleId -PassThru -Force -Verbose -ErrorAction SilentlyContinue 
-                    Write-Output "Waiting to completely remove custom role definition $($azUserReset.rbacRole)..."
-                    Start-Sleep -Seconds 10 
-                    $currentCustomRoleDefId = (Get-AzRoleDefinition -Name $azUserReset.rbacRole).id 
-                } until ($null -eq $currentCustomRoleDefId)
-            }
         } # end foreach
         # Removes the custom role definition from the subscription as part of cleanup.
         # Remove Administrative Unit
