@@ -345,18 +345,19 @@ function Add-AzIdentities
     {
         foreach ($azUserReset in $azUsers)
         {
+            $upn = $azUserReset.userName + "@" + $tenantDomain
+            $groupObjectId = (Get-AzADGroup -DisplayName $azUserReset.aadSecurityGroup).id
             if ($azUserReset.rbacType -eq "Custom")
             {
                 $customRoleId = (Get-AzRoleDefinition -Name $azUserReset.rbacRole).id
                 do {
-                    Remove-AzRoleDefinition -Id $customRoleId -PassThru -Force -Verbose -ErrorAction SilentlyContinue 
+                    Remove-AzRoleAssignment -ObjectId $groupObjectId -RoleDefinitionName $azUserReset.rbacRole -PassThru -Confirm:$false -Verbose
+                    Remove-AzRoleDefinition -Id $customRoleId -Force -Confirm:$false -PassThru -Verbose -ErrorAction SilentlyContinue
                     Write-Output "Waiting to completely remove custom role definition $($azUserReset.rbacRole)..."
                     Start-Sleep -Seconds 10 
                     $currentCustomRoleDefId = (Get-AzRoleDefinition -Name $azUserReset.rbacRole).id 
                 } until ($null -eq $currentCustomRoleDefId)
             }
-            $upn = $azUserReset.userName + "@" + $tenantDomain
-            $groupObjectId = (Get-AzADGroup -DisplayName $azUserReset.aadSecurityGroup).id
             $resetRoleList = ($azUserReset.rbacRole).Split(',')
             foreach ($resetRole in $resetRoleList)
             {
