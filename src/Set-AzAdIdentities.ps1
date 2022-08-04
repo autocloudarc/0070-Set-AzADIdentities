@@ -396,7 +396,6 @@ $scriptName = $MyInvocation.MyCommand.name
 # Use script filename without exension as a log prefix
 $LogPrefix = $scriptName.Split(".")[0]
 # Uncomment below if this script is converted to use PowerShell core (v7.x)
-<#
 if ($isWindows)
 {
     $modulePath = "C:\Program Files\WindowsPowerShell\Modules"
@@ -405,8 +404,6 @@ else
 {
     $modulePath = "/usr/local/share/powershell/Modules"
 } # end else if
-#>
-$modulePath = "C:\Program Files\WindowsPowerShell\Modules"
 
 $LogDirectory = Join-Path $modulePath -ChildPath $LogPrefix -Verbose
 # Create log directory if not already present
