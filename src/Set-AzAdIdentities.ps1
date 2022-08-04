@@ -1,5 +1,6 @@
 ﻿#requires -version 5.1
 #requires -RunAsAdministrator
+#requires -Module Az
 
 
 Using Namespace System.Net # For ServicePointmanager Class, ref: https://docs.microsoft.com/en-us/dotnet/api/system.net.servicepointmanager?view=net-5.0
