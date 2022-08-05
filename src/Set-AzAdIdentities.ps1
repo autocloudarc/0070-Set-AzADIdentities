@@ -140,6 +140,8 @@ $adminUnit = @{
     description = $adminUnitDescription
 }
 
+Update-Module -Name Az -AllowClobber -Force -Verbose
+
 #region Environment setup
 # Use TLS 1.2 to support Nuget provider
 Write-Output "Configuring security protocol to use TLS 1.2 for Nuget support when installing modules." -Verbose
@@ -383,6 +385,21 @@ function Add-AzIdentities
         # Write-Output "You must manually remove any role assignments for the $customRole as well as remove this custom role $customRole manually from the Azure Portal at https://portal.azure.com"
     } # end else
 } # end function
+
+# Ask to update Az modules
+$updateAzModulesPrompt = "Would you like to update your Az modules to the latest versions? [YES/NO or [Y/N]]"
+Do
+{
+    $updateAzModulesResponse = read-host $updateAzModulesPrompt
+    $updateAzModulesResponse = $updateAzModulesResponse.ToUpper()
+} # end do
+Until ($updateAzModulesResponse -eq "Y" -OR $updateAzModulesResponse -eq "YES" -OR $updateAzModulesResponse -eq "N" -OR $updateAzModulesResponse -eq "NO")
+
+# Exit if user does not want to continue
+If ($openTranscriptResponse -in 'Y', 'YES')
+{
+    Update-Module -Name Az -Force -AllowClobber -Verbose
+} #end condition
 
 #endregion FUNCTIONS
 
