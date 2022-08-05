@@ -153,7 +153,7 @@ function Install-BootstrapModules
     Install-PackageProvider -Name Nuget -ForceBootstrap -Force
 
     # Bootstrap dependent modules
-    $ARMDeployModule = "ARMDeploy"
+    $ARMDeployModule = @("ARMDeploy","PoshOpenShareFile")
     if (Get-InstalledModule -Name $ARMDeployModule -ErrorAction SilentlyContinue)
     {
         # If module exists, update it
@@ -508,8 +508,8 @@ if (-not($reset))
     $updatedRoleContent = $initializedRoleContent.Replace($defaultSubId,$targetSubId)
 
     # Write the updated role definition back out to the file system
-    $updatedRoleContent | Out-File -FilePath $customRolePath -Force
-
+    $updatedRoleContent | Out-File -FilePath $customRolePath -Force -Verbose -ErrorAction SilentlyContinue
+	
     # Import the updated role definition to the current subscription
     New-AzRoleDefinition -InputFile $customRolePath -Verbose
     # Write the initialized role definition back out to the file system
