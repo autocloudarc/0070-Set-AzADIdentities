@@ -148,6 +148,8 @@ Write-Output "Configuring security protocol to use TLS 1.2 for Nuget support whe
 
 function Install-BootstrapModules
 {
+	[CmdletBinding()]
+	param()
     # Module repository setup and configuration
     Set-PSRepository -Name $PSModuleRepository -InstallationPolicy Trusted -Verbose
     Install-PackageProvider -Name Nuget -ForceBootstrap -Force
@@ -406,6 +408,9 @@ If ($openTranscriptResponse -in 'Y', 'YES')
 #region INITIALIZE VALUES
 # Create Log file
 [string]$Transcript = $null
+
+# Install pre-requisite modules
+Install-BootstrapModules 
 
 #region TRANSCRIPT
 $scriptName = $MyInvocation.MyCommand.name
