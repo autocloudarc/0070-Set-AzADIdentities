@@ -155,7 +155,7 @@ function Install-BootstrapModules
     Install-PackageProvider -Name Nuget -ForceBootstrap -Force
 
     # Bootstrap dependent modules
-    $ARMDeployModules = @("ARMDeploy","AzureADPreview")
+    $ARMDeployModules = @("ARMDeploy","AzureAD")
 	foreach ($ARMDeployModule in $ARMDeployModules)
 	{
         if (Get-InstalledModule -Name $ARMDeployModule -ErrorAction SilentlyContinue)
