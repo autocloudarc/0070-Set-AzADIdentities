@@ -509,7 +509,7 @@ if (-not($reset))
 
     # Write the updated role definition back out to the file system
     # $updatedRoleContent | Out-File -FilePath $customRolePath -Force -Verbose -ErrorAction SilentlyContinue
-	updatedRoleContent | Out-File -FilePath $customRolePath -Force -Verbose
+	$updatedRoleContent | Out-File -FilePath $customRolePath -Force -Verbose
 	
     # Import the updated role definition to the current subscription
     New-AzRoleDefinition -InputFile $customRolePath -Verbose
