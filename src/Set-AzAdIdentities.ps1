@@ -153,30 +153,30 @@ function Install-BootstrapModules
     Install-PackageProvider -Name Nuget -ForceBootstrap -Force
 
     # Bootstrap dependent modules
-    $ARMDeployModule = @("ARMDeploy","PoshOpenShareFile")
-    if (Get-InstalledModule -Name $ARMDeployModule -ErrorAction SilentlyContinue)
-    {
-        # If module exists, update it
-        [string]$currentVersionADM = (Find-Module -Name $ARMDeployModule -Repository $PSModuleRepository).Version
-        [string]$installedVersionADM = (Get-InstalledModule -Name $ARMDeployModule).Version
-        If ($currentVersionADM -ne $installedVersionADM)
+    $ARMDeployModules = @("ARMDeploy","AzureADPreview")
+	foreach ($ARMDeployModule in $ARMDeployModules)
+	{
+        if (Get-InstalledModule -Name $ARMDeployModule -ErrorAction SilentlyContinue)
         {
-                # Update modules if required
-                Update-Module -Name $ARMDeployModule -Force -ErrorAction SilentlyContinue -Verbose
+            # If module exists, update it
+            [string]$currentVersionADM = (Find-Module -Name $ARMDeployModule -Repository $PSModuleRepository).Version
+            [string]$installedVersionADM = (Get-InstalledModule -Name $ARMDeployModule).Version
+            If ($currentVersionADM -ne $installedVersionADM)
+            {
+                    # Update modules if required
+                    Update-Module -Name $ARMDeployModule -Force -ErrorAction SilentlyContinue -Verbose
+            } # end if
         } # end if
-    } # end if
-    # If the modules aren't already loaded, install and import it.
-    else
-    {
-        Install-Module -Name $ARMDeployModule -Repository $PSModuleRepository -Force -Verbose
-    } #end If
-    Import-Module -Name $ARMDeployModule -Verbose
+        # If the modules aren't already loaded, install and import it.
+        else
+        {
+            Install-Module -Name $ARMDeployModule -Repository $PSModuleRepository -Force -Verbose
+        } #end If
+        Import-Module -Name $ARMDeployModule -Verbose
 
-    # Install updated Az modules
-    Install-Module -Name Az -AllowClobber -Verbose
-    # Get required PowerShellGallery.com modules.
-    Get-ARMDeployPSModule -ModulesToInstall "AzureAD" -PSRepository $PSModuleRepository -Verbose 
-
+        # Get required PowerShellGallery.com modules.
+        Get-ARMDeployPSModule -ModulesToInstall $ARMDeployModule -PSRepository $PSModuleRepository -Verbose 
+    } # end foreach
 } # end function
 
 #region FUNCTIONS
@@ -454,11 +454,11 @@ Write-Output "Please see the open dialogue box in your browser to authenticate t
 # Clear any possible cached credentials for other subscriptions
 Clear-AzContext -PassThru -Force -Verbose
 
-Connect-AzAccount -Environment AzureCloud
+Login-AzAccount -Environment AzureCloud
 
 # https://docs.microsoft.com/en-us/azure/azure-government/documentation-government-get-started-connect-with-ps
 # To connect to AzureUSGovernment, use:
-# Connect-AzAccount -EnvironmentName AzureUSGovernment
+# Login-AzAccount -EnvironmentName AzureUSGovernment
 Do
 {
     (Get-AzSubscription).Name
@@ -508,8 +508,7 @@ if (-not($reset))
     $updatedRoleContent = $initializedRoleContent.Replace($defaultSubId,$targetSubId)
 
     # Write the updated role definition back out to the file system
-    # $updatedRoleContent | Out-File -FilePath $customRolePath -Force -Verbose -ErrorAction SilentlyContinue
-	$updatedRoleContent | Out-File -FilePath $customRolePath -Force -Verbose
+ 	$updatedRoleContent | Out-File -FilePath $customRolePath -Force -Verbose
 	
     # Import the updated role definition to the current subscription
     New-AzRoleDefinition -InputFile $customRolePath -Verbose
