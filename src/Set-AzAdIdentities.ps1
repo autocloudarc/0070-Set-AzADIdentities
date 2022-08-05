@@ -140,8 +140,6 @@ $adminUnit = @{
     description = $adminUnitDescription
 }
 
-Update-Module -Name Az -AllowClobber -Force -Verbose
-
 #region Environment setup
 # Use TLS 1.2 to support Nuget provider
 Write-Output "Configuring security protocol to use TLS 1.2 for Nuget support when installing modules." -Verbose
@@ -398,7 +396,7 @@ Until ($updateAzModulesResponse -eq "Y" -OR $updateAzModulesResponse -eq "YES" -
 # Exit if user does not want to continue
 If ($openTranscriptResponse -in 'Y', 'YES')
 {
-    Update-Module -Name Az -Force -AllowClobber -Verbose
+    Update-Module -Name Az -Force -Verbose
 } #end condition
 
 #endregion FUNCTIONS
