@@ -403,8 +403,6 @@ If ($openTranscriptResponse -in 'Y', 'YES')
 
 #endregion FUNCTIONS
 
-### This PowerShell Script creates PoC Environment based on JSON Templates
-
 #region INITIALIZE VALUES
 # Create Log file
 [string]$Transcript = $null
@@ -423,7 +421,9 @@ if ($isWindows)
 } # end if
 else
 {
-    $modulePath = "/usr/local/share/powershell/Modules"
+    # $modulePath = "/usr/local/share/powershell/Modules"
+	Write-Host "Only Windows PowerShell is supported at this time. Terminating script."
+	Exit-PSSession
 } # end else if
 
 $LogDirectory = Join-Path $modulePath -ChildPath $LogPrefix -Verbose
