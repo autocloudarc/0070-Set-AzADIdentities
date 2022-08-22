@@ -415,11 +415,11 @@ $scriptName = $MyInvocation.MyCommand.name
 # Use script filename without exension as a log prefix
 $LogPrefix = $scriptName.Split(".")[0]
 # Uncomment below if this script is converted to use PowerShell core (v7.x)
-if ($isWindows)
+if ($PSVersionTable.Edition -eq 'Desktop')
 {
     $modulePath = "C:\Program Files\WindowsPowerShell\Modules"
 } # end if
-else
+elseif
 {
     # $modulePath = "/usr/local/share/powershell/Modules"
 	Write-Host "Only Windows PowerShell is supported at this time. Terminating script."
