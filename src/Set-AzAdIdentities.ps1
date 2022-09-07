@@ -419,7 +419,7 @@ if ($PSVersionTable.Edition -eq 'Desktop')
 {
     $modulePath = "C:\Program Files\WindowsPowerShell\Modules"
 } # end if
-elseif
+else
 {
     # $modulePath = "/usr/local/share/powershell/Modules"
 	Write-Host "Only Windows PowerShell is supported at this time. Terminating script."
