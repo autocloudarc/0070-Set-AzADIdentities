@@ -396,7 +396,7 @@ Do
 Until ($updateAzModulesResponse -eq "Y" -OR $updateAzModulesResponse -eq "YES" -OR $updateAzModulesResponse -eq "N" -OR $updateAzModulesResponse -eq "NO")
 
 # Exit if user does not want to continue
-If ($openTranscriptResponse -in 'Y', 'YES')
+If ($updateAzModulesResponse -in 'Y', 'YES')
 {
     Update-Module -Name Az -Force -Verbose
 } #end condition
