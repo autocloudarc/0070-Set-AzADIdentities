@@ -415,7 +415,7 @@ $scriptName = $MyInvocation.MyCommand.name
 # Use script filename without exension as a log prefix
 $LogPrefix = $scriptName.Split(".")[0]
 # Uncomment below if this script is converted to use PowerShell core (v7.x)
-if ($PSVersionTable.Edition -eq 'Desktop')
+if ($PSVersionTable.PSEdition -eq 'Desktop')
 {
     $modulePath = "C:\Program Files\WindowsPowerShell\Modules"
 } # end if
@@ -426,7 +426,7 @@ else
 	Exit-PSSession
 } # end else if
 
-$LogDirectory = Join-Path $modulePath -ChildPath $LogPrefix -Verbose
+$LogDirectory = Join-Path -Path $modulePath -ChildPath $LogPrefix -Verbose
 # Create log directory if not already present
 If (-not(Test-Path -Path $LogDirectory -ErrorAction SilentlyContinue))
 {
