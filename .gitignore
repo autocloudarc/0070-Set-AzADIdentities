@@ -64,3 +64,6 @@ data/dsc/mof/cltsql1003.dev.adatum.com.mof.error
 
 # Diagrams
 **/*.vsdx
+
+# Role definition files
+**/*.json
